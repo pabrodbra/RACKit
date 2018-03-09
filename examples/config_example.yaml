@@ -1,0 +1,22 @@
+# --- Inputs
+reads-fasta: reads.fa
+
+# Megahit
+megahit: /home/user/software/megahit/megahit
+
+# Makeblastdb
+makeblastdb: makeblastdb
+
+# Blastn
+blastn: blastn
+
+# Qnuclparserblast
+qnuclparserblast: qnuclparserblast
+
+
+reads-parsed-blast: readsparsed-blast.csv
+contigs-parsed-blast:
+# --- Intermediate
+
+
+# --- Output
