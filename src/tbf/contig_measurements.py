@@ -1,5 +1,5 @@
 import sys
-from grefco import GREFCO
+#from grefco import GREFCO
 
 def contig_measurement(fix_blast_contigs, grefco_contig):
         tp=0
