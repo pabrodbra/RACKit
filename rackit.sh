@@ -28,4 +28,8 @@ READS=0
 DB=0
 
 ### Outputs
-# Wow
+# Output Directory Path
+OUTPUT_PATH=0
+INTERMEDIATE_FILES="{OUTPUT_PATH}intermediateFiles/"
+
+### --- Execution --- ####
