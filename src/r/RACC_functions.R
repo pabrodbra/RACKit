@@ -1,291 +1,119 @@
-# RACC functions
-# By: Pablo Rodriguez Brazzarola
+# Made by Pablo Rodríguez Brazzarola
+# RACC Results Processing Functions
+# Libraries
+library(ggplot2)
+library(reshape2)
 
-RACC.uniseqDB.coverage.plot <- function(coverage.data, output.name="DB_coverage.png"){
-  coverage.info <- read.csv(coverage.data, header=TRUE, sep = '\t')
-  coverage.info <- coverage.info[c("ReadOnly", "BothYes", "ContigOnly", "BothNo")]
-  coverage.total <- sum(as.numeric(coverage.info))
-  
-  pie.colors <- c("dodgerblue4", "dodgerblue1","deepskyblue", "olivedrab2")
-  pie.names <- c("Read Only", "Both", "Contig Only", "None")
-  
-  coverage.info["ReadOnly"] <- coverage.info["ReadOnly"]-coverage.info["BothYes"]
-  coverage.info["ContigOnly"] <- coverage.info["ContigOnly"]-coverage.info["BothYes"]
-  
-  coverage.label <- c(signif(coverage.info[1]*100/coverage.total), signif(coverage.info[2]*100/coverage.total)
-                      , signif(coverage.info[3]*100/coverage.total), signif(coverage.info[4]*100/coverage.total))
-  
-  png(filename = output.name, width = 1024, height = 1024)
-  pie(as.numeric(coverage.info), labels = paste("Percentage: ", coverage.label, "\nNucleotides (Mbp): ", signif(coverage.info/1000000)), col = pie.colors
-      , main = paste("Percentage of Database Covered (Total Mbp = ", signif(sum(coverage.info/1000000)), ")", sep=""), init.angle = 45)
-  legend("bottomleft", pie.names, cex = 1.5, fill = pie.colors)
-  dev.off()
-}
+# Constants
+rank.names <- c("Species","Genus","Family","Order","Class","Phylum","Kingdom","Domain", "Organism")
+inconsistency.types <- c("WR","WC","H")
+plot.width <- 1024
+plot.height <- 
 
-RACC.inconsistency.full <- function(inconsistency.data, n.reads, n.contigs, output.name="INCplot", filter.flag=FALSE, binary.flag=TRUE, null.tax.flag = FALSE){
-  inconsistency_info <- read.csv(inconsistency.data, header=TRUE)
-  
-  if(null.tax.flag == TRUE){
-    inconsistency_info <- inconsistency_info[-which(inconsistency_info$ReadTaxonomy=="None"),]
-    inconsistency_info <- inconsistency_info[-which(inconsistency_info$ContigTaxonomy=="None"),]
-  }
-  
-  #Get taxons
-  read.taxons <- as.vector(unique(inconsistency_info$ReadTaxonomy))
-  contig.taxons <- as.vector(unique(inconsistency_info$ContigTaxonomy))
-  
-  # Count inconsistencies
-  read.inconsistencies <- sapply(1:length(read.taxons), function(x) 
-    sum(inconsistency_info$ReadTaxonomy == read.taxons[[x]]) )
-  
-  contig.inconsistencies <- sapply(1:length(contig.taxons), function(x) 
-    sum(inconsistency_info$ContigTaxonomy == contig.taxons[[x]]) )
-  
-  names(read.inconsistencies) <- read.taxons
-  names(contig.inconsistencies) <- contig.taxons
-  
-  read.inconsistencies <- sort(read.inconsistencies, decreasing = TRUE)
-  contig.inconsistencies <- sort(contig.inconsistencies, decreasing = TRUE)
-  
-  RACC.inconsistency.barplots(read.inconsistencies = read.inconsistencies, contig.inconsistencies = contig.inconsistencies, output.name = output.name, filter=filter.flag)
-  RACC.inconsistency.barplots_v2(inconsistency_info = inconsistency_info, output.name = output.name, filter = filter.flag)
-  RACC.inconsistency.pieplots_v2(inconsistency_info = inconsistency_info, n.reads.total = n.reads, n.contigs.total = n.contigs, output.name = output.name, binary=binary.flag)
-}
+#1 BEAR pa file -> orig.distro.per.taxa
+#2 MEGAN Reads Distro per Taxa -> reads.distro.per.taxa
+#3 MEGAN Contigs Distro per Taxa -> contigs.distro.per.taxa
 
-RACC.inconsistency.barplots <- function(read.inconsistencies, contig.inconsistencies, output.name="INCplot", filter=FALSE){
-  colorfunc <- colorRampPalette(c("light green", "dark green", "light blue", "dark blue", "purple", "dark red", "orange"))
-  
-  if(filter == TRUE){
-    filtered.read.inconsistencies <- read.inconsistencies[which(read.inconsistencies > sum(read.inconsistencies)/100)]
-    filtered.contigs.inconsistencies <-  contig.inconsistencies[which(contig.inconsistencies > sum(contig.inconsistencies)/100)]
-    
-    png(filename=paste(output.name,"_filtered_reads_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(filtered.read.inconsistencies, main = "Reads Inconsistencies (>1%) per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(filtered.read.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(filtered.read.inconsistencies), cex = 1.5, fill = colorfunc(length(filtered.read.inconsistencies)), ncol = 2)
-    dev.off()
-    
-    png(filename=paste(output.name,"_filtered_contigs_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(filtered.contigs.inconsistencies, main = "Contigs Inconsistencies (>1%) per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(filtered.contigs.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(filtered.contigs.inconsistencies), cex = 1.5, fill = colorfunc(length(filtered.contigs.inconsistencies)), ncol = 2)
-    dev.off()
-    
-  }else{
-    png(filename=paste(output.name,"_reads_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(read.inconsistencies, main = "Reads Inconsistencies per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(read.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(read.inconsistencies)[1:15], cex = 1.5, fill = colorfunc(length(read.inconsistencies)), ncol = 2)
-    dev.off()
-    
-    png(filename=paste(output.name,"_contigs_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(contig.inconsistencies, main = "Contigs Inconsistencies per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(contig.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(contig.inconsistencies)[1:15], cex = 1.5, fill = colorfunc(length(contig.inconsistencies)), ncol = 2)
-    dev.off()
-  }
-  
-}
+### Original Distro
+# I: 1
+# O: Plot
 
-RACC.inconsistency.barplots_v2 <- function(inconsistency_info, output.name="INCplot", filter=FALSE){
-  colorfunc <- colorRampPalette(c("light green", "dark green", "light blue", "dark blue", "purple", "dark red", "orange"))
-  
-  # Get taxons
-  inconsistency_info <- inconsistency_info[-which(inconsistency_info$ReadTaxonomy == "None"),]
-  inconsistency_info <- inconsistency_info[-which(inconsistency_info$ContigTaxonomy == "None"),]
-  
-  read.taxons <- as.vector(unique(inconsistency_info$ReadTaxonomy))
-  contig.taxons <- as.vector(unique(inconsistency_info$ContigTaxonomy))
-  
-  # Count inconsistencies
-  read.inconsistencies <- sapply(1:length(read.taxons), function(x) 
-    sum(inconsistency_info$ReadTaxonomy == read.taxons[[x]]) )
-  contig.inconsistencies <- sapply(1:length(contig.taxons), function(x) 
-    sum(inconsistency_info$ContigTaxonomy == contig.taxons[[x]]) )
-  
-  names(read.inconsistencies) <- read.taxons
-  names(contig.inconsistencies) <- contig.taxons
-  
-  read.inconsistencies <- sort(read.inconsistencies, decreasing = TRUE)
-  contig.inconsistencies <- sort(contig.inconsistencies, decreasing = TRUE)
-  
-  if(filter==FALSE){
-    #Draw Images
-    png(filename=paste(output.name,"_HARD_reads_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(read.inconsistencies, main = "Reads Strong Inconsistencies per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(read.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(read.inconsistencies)[1:15], cex = 1.5, fill = colorfunc(length(read.inconsistencies)), ncol = 2)
-    dev.off()
-    
-    png(filename=paste(output.name,"_HARD_contigs_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(contig.inconsistencies, main = "Contigs Strong Inconsistencies per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(contig.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(contig.inconsistencies)[1:15], cex = 1.5, fill = colorfunc(length(contig.inconsistencies)), ncol = 2)
-    dev.off()
-  }else{
-    filtered.read.inconsistencies <- read.inconsistencies[which(read.inconsistencies > sum(read.inconsistencies)/100)]
-    filtered.contigs.inconsistencies <-  contig.inconsistencies[which(contig.inconsistencies > sum(contig.inconsistencies)/100)]
-  
-    #Draw Images
-    png(filename=paste(output.name,"_HARD_filtered_reads_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(filtered.read.inconsistencies, main = "Reads Strong Inconsistencies (>1%) per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(filtered.read.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(filtered.read.inconsistencies), cex = 1.5, fill = colorfunc(length(filtered.read.inconsistencies)), ncol = 2)
-    dev.off()
-    
-    png(filename=paste(output.name,"_HARD_filtered_contigs_inconsistencies.png", sep = ""), width = 1024, height = 1024)
-    barplot(filtered.contigs.inconsistencies, main = "Contigs Strong Inconsistencies (>1%) per Taxonomy", ylab = "Inconsistencies", xlab = "Taxonomy", 
-            col = colorfunc(length(filtered.contigs.inconsistencies)), beside = TRUE, cex.names = 0.6, log="y")
-    legend("topright", names(filtered.contigs.inconsistencies)[1:15], cex = 1.5, fill = colorfunc(length(filtered.contigs.inconsistencies)), ncol = 2)
-    dev.off()
-  }
-}
+### Distro Comparison
+# I: 1,2,3
+# O: Plot
 
-RACC.inconsistency.pieplots <- function(inconsistency_info, n.reads.total, n.contigs.total, output.name="INCplot", binary=TRUE){
-  if(binary == TRUE){
-    tot.colors <- c("blue", "orange")
-    tot.names <- c("Consistent", "Inconsistent")
-    
-    n.reads.inconsistent <- length(unique(inconsistency_info$ReadID))
-    reads.label = c(signif((n.reads.total-n.reads.inconsistent)*100/n.reads.total), signif(n.reads.inconsistent*100/n.reads.total))
-    
-    png(filename=paste(output.name,"_total_reads.png", sep = ""), width = 1024, height = 1024)
-    pie(c(n.reads.total-n.reads.inconsistent, n.reads.inconsistent), labels = paste("Percentage: ",reads.label, "\nAmount: ", c(n.reads.total-n.reads.inconsistent, n.reads.inconsistent)), col = tot.colors
-        , main = "Reads Taxonomy Status after classification")
-    legend("topleft", tot.names, cex = 1.5, fill = tot.colors)
+### RMSE
+# I: 1,2,3
+# O: Table CSV
+
+### Inconsistencies Found
+# I: 
+# O: Table CSV
+
+### Inconsistency Resolution
+# I: Solved_Inconsistencies_CSV
+# O: Plot
+inconsistency_resolution <- function(solved_inconsistencies_csv, output.path){
+    # Load data
+    solved.data <-read.csv2(solved_inconsistencies_csv, header = TRUE, sep = ',')
+
+    # Sort by RankSolved
+    rank.solved.inconsistency <- sort(unique(solved.data$RankSolved), decreasing=TRUE)
+
+    # Where are Inconsistencies Solved
+    count.rank.solved.inconsistency <- sapply(1:length(rank.solved.inconsistency), function(x)
+        sum(solved.data$RankSolved == rank.solved.inconsistency[[x]]))
+    names(count.rank.solved.inconsistency) <- rank.names
+
+    # Summed where are Inconsistencies Solved
+    sum.solved.ranks <- sapply(1:length(count.rank.solved.inconsistency), function(x)
+        sum(count.rank.solved.inconsistency[1:x]))
+    names(sum.solved.ranks) <- rank.names
+
+    # Type of Inconsistencies
+    count.types <- sapply(1:length(inconsistency.types), function(x)
+    sum(solved.data$Type == inconsistency.types[[x]]))
+    names(count.types) <- inconsistency.types
+
+    # Where are Inconsistencies Solved for each Inconsistency Type
+    solved.inconsistencies.WR <- sapply(1:length(rank.solved.inconsistency), function(x)
+        sum(solved.data$RankSolved[which(solved.data$Type == "WR")] == rank.solved.inconsistency[[x]]))
+    solved.inconsistencies.WC <- sapply(1:length(rank.solved.inconsistency), function(x)
+        sum(solved.data$RankSolved[which(solved.data$Type == "WC")] == rank.solved.inconsistency[[x]]))
+    solved.inconsistencies.H <- sapply(1:length(rank.solved.inconsistency), function(x)
+        sum(solved.data$RankSolved[which(solved.data$Type == "H")] == rank.solved.inconsistency[[x]]))
+
+    solved.inconsistencies.per.type <- rbind(solved.inconsistencies.WR, solved.inconsistencies.WC, solved.inconsistencies.H)
+    colnames(solved.inconsistencies.per.type) <- rank.names
+
+    # Sum where Inconsistencies are Solved per Inconsistency Type
+    sum.solved.ranks.WR <- sapply(1:length(count.rank.solved.inconsistency), function(x)
+    sum(solved.inconsistencies.per.type[1,1:x]))
+    sum.solved.ranks.WC <- sapply(1:length(count.rank.solved.inconsistency), function(x)
+    sum(solved.inconsistencies.per.type[2,1:x]))
+    sum.solved.ranks.H <- sapply(1:length(count.rank.solved.inconsistency), function(x)
+    sum(solved.inconsistencies.per.type[3,1:x]))
+
+    sum.solved.ranks.per.type <- rbind(sum.solved.ranks.WR,sum.solved.ranks.WC,sum.solved.ranks.H)
+    colnames(sum.solved.ranks.per.type) <- rank.names
+
+    # Normalize
+    normalize.sum.solved.ranks.per.type <- sum.solved.ranks.per.type*100/c(sum.solved.ranks.per.type[,ncol(sum.solved.ranks.per.type)])  #as.matrix(sum.solved.ranks.per.type)
+    # Melt
+    melt.sum.solved.ranks.per.type <-melt(normalize.sum.solved.ranks.per.type,id.vars=names(normalize.sum.solved.ranks.per.type))
+    # Plot
+    png(filename = output.path, width = plot.width, height = plot.height)
+    ggplot(melt.sum.solved.ranks.per.type,aes(x=factor(Var2),y=value,fill=factor(Var1)))+
+        geom_bar(stat="identity",position="dodge")+
+        scale_fill_brewer(palette = "Set1", name="Inconsistency Type",
+                        labels=c("Weak Reads", "Weak Contigs", "Hard"))+
+        xlab("Taxonomic Rank")+
+        ylab("Percentage of Inconsistencies Solved")+
+        ggtitle("Taxonomic rank where Inconsistencies are Solved (FSD)", subtitle = "Percentage for each Type")+
+        theme(axis.title = element_text(size=22),
+            axis.text = element_text(size=18),
+            plot.title =element_text(size=25,face="bold"),
+            plot.subtitle = element_text(size=18),
+            legend.text=element_text(size=15),
+            legend.title =element_text(size=18))
     dev.off()
-    
-    # Contigs Assigned
-    n.contigs.inconsistent <- length(unique(inconsistency_info$ContigID))
-    contigs.label <-  c(signif((n.contigs.total-n.contigs.inconsistent)*100/n.contigs.total), signif(n.contigs.inconsistent*100/n.contigs.total))
-    
-    png(filename=paste(output.name,"_total_contigs.png", sep = ""), width = 1024, height = 1024)
-    pie(c(n.contigs.total-n.contigs.inconsistent, n.contigs.inconsistent), labels = paste("Percentage: ", contigs.label, "\nAmount: ", c(n.contigs.total-n.contigs.inconsistent, n.contigs.inconsistent)), col = tot.colors
-        , main = "Contigs Taxonomy Status after classification")
-    legend("topleft", tot.names, cex = 1.5, fill = tot.colors)
-    dev.off()
-  }
-  else{
-    # Obtain Semiconsistent (-) and Inconsistent (+)
-    tot.colors <- c("blue", "orange", "red")
-    tot.names <- c("Consistent", "Semi-Inconsistent", "Inconsistent")
-    
-    ## All
-    reads.inconsistent.plus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '+'),]$ReadID
-    reads.inconsistent.minus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '-'),]$ReadID
-    n.reads.inconsistent.plus <- length(unique(reads.inconsistent.plus))
-    n.reads.inconsistent.minus <- length(unique(reads.inconsistent.minus))
-    
-    contigs.inconsistent.plus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '+'),]$ContigID
-    contigs.inconsistent.minus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '-'),]$ContigID
-    n.contigs.inconsistent.plus <- length(unique(contigs.inconsistent.plus))
-    n.contigs.inconsistent.minus <- length(unique(contigs.inconsistent.minus))
-    
-    # Reads
-    n.reads.consistant <- n.reads.total-n.reads.inconsistent.plus-n.reads.inconsistent.minus
-    reads.label = c(signif(n.reads.consistant*100/n.reads.total), signif(n.reads.inconsistent.plus*100/n.reads.total)
-                    , signif(n.reads.inconsistent.minus*100/n.reads.total))
-    
-    png(filename=paste(output.name,"_nb_total_reads.png"), width = 1024, height = 1024)
-    pie(c(n.reads.consistant, n.reads.inconsistent.plus, n.reads.inconsistent.minus), labels = paste("Percentage: ",reads.label, 
-                                                                                                     "\nAmount: ", c(n.reads.consistant, n.reads.inconsistent.plus, n.reads.inconsistent.minus)), col = tot.colors
-        , main = "Reads Taxonomy Status after classification")
-    legend("topleft", tot.names, cex = 1.5, fill = tot.colors)
-    dev.off()
-    
-    # Contigs
-    n.contigs.inconsistent <- length(unique(inconsistency_info$ContigID))
-    n.contigs.consistant <- n.contigs.total-n.contigs.inconsistent.plus-n.contigs.inconsistent.minus
-    contigs.label <-  c(signif(n.contigs.consistant*100/n.contigs.total), signif(n.contigs.inconsistent.plus*100/n.contigs.total)
-                        , signif(n.contigs.inconsistent.minus*100/n.reads.total))
-    
-    png(filename=paste(output.name,"_nb_total_contigs.png"), width = 1024, height = 1024)
-    pie(c(n.contigs.consistant, n.contigs.inconsistent.plus, n.contigs.inconsistent.minus), labels = paste("Percentage: ", contigs.label,
-                                                                                                           "\nAmount: ", c(n.contigs.consistant, n.contigs.inconsistent.plus, n.contigs.inconsistent.minus)), col = tot.colors, 
-        main = "Contigs Taxonomy Status after classification")
-    legend("topleft", tot.names, cex = 1.5, fill = tot.colors)
-    dev.off()
-  }
+
+    output.return <- list(
+        "count.rank.solved.inconsistency" = count.rank.solved.inconsistency,
+        "sum.solved.ranks" = sum.solved.ranks,
+        "count.types" = count.types,
+        "solved.inconsistencies.per.type" = solved.inconsistencies.per.type,
+        "sum.solved.ranks.per.type" = sum.solved.ranks.per.type,
+        "normalize.sum.solved.ranks.per.type" = normalize.sum.solved.ranks.per.type,
+    )
+    return(output.return)
 }
 
 
-RACC.inconsistency.pieplots_v2 <- function(inconsistency_info, n.reads.total, n.contigs.total, output.name="INCplot", binary=TRUE){
-  if(binary == TRUE){
-    tot.colors <- c("blue", "chocolate1", "chocolate4", "coral3")
-    tot.names <- c("Consistent", "Weakly Inconsistent Reads", "Strongly Inconsistent", "Weakly Inconsistent Contigs")
-    
-    n.reads.inconsistent <- length(unique(inconsistency_info$ReadID))
-    n.none.r.reads <- length(unique(inconsistency_info[which(inconsistency_info$ReadTaxonomy == "None"),]$ReadID))
-    n.none.r.contigs <- length(unique(inconsistency_info[which(inconsistency_info$ContigTaxonomy == "None"),]$ReadID))
-    n.none.r.total <- n.none.r.reads + n.none.r.contigs
-    
-    reads.label = c(signif((n.reads.total-n.reads.inconsistent)*100/n.reads.total), signif(n.none.r.reads*100/n.reads.total)
-                                                                                           , signif((n.reads.inconsistent-n.none.r.total)*100/n.reads.total)
-                                                                                                    , signif(n.none.r.contigs*100/n.reads.total))
-    reads.data <- c((n.reads.total-n.reads.inconsistent),n.none.r.reads,(n.reads.inconsistent-n.none.r.total), n.none.r.contigs)
-    
-    png(filename=paste(output.name,"_total_reads.png", sep = ""), width = 1024, height = 1024)
-    pie(reads.data, labels = paste("Percentage: ",reads.label, "\nAmount: ", reads.data), col = tot.colors
-        , main = "Reads Taxonomy Status after classification")
-    legend("topleft", paste(tot.names, " : ", reads.data, sep=""), cex = 1.5, fill = tot.colors)
-    dev.off()
-    
-    # Contigs Assigned
-    n.contigs.inconsistent <- length(unique(inconsistency_info$ContigID))
-    n.none.c.reads <- length(unique(inconsistency_info[which(inconsistency_info$ReadTaxonomy == "None"),]$ContigID))
-    n.none.c.contigs <- length(unique(inconsistency_info[which(inconsistency_info$ContigTaxonomy == "None"),]$ContigID))
-    n.none.c.total <- n.none.c.reads + n.none.c.contigs
-    
-    contigs.label = c(signif((n.contigs.total-n.contigs.inconsistent)*100/n.contigs.total), signif(n.none.c.reads*100/n.contigs.total)
-                    , signif((n.contigs.inconsistent-n.none.c.total)*100/n.contigs.total)
-                    , signif(n.none.c.contigs*100/n.contigs.total))
-    contigs.data <- c((n.contigs.total-n.contigs.inconsistent),n.none.c.reads,(n.contigs.inconsistent-n.none.c.total), n.none.c.contigs)
-    
-    png(filename=paste(output.name,"_total_contigs.png", sep = ""), width = 1024, height = 1024)
-    pie(contigs.data, labels = paste("Percentage: ", contigs.label, "\nAmount: ", contigs.data), col = tot.colors
-        , main = "Contigs Taxonomy Status after classification")
-    legend("topleft", paste(tot.names, " : ", contigs.data, sep=""), cex = 1.5, fill = tot.colors)
-    dev.off()
-  }
-  else{
-    # Obtain Semiconsistent (-) and Inconsistent (+)
-    tot.colors <- c("blue", "orange", "red")
-    tot.names <- c("Consistent", "Semi-Inconsistent", "Inconsistent")
-    
-    ## All
-    reads.inconsistent.plus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '+'),]$ReadID
-    reads.inconsistent.minus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '-'),]$ReadID
-    n.reads.inconsistent.plus <- length(unique(reads.inconsistent.plus))
-    n.reads.inconsistent.minus <- length(unique(reads.inconsistent.minus))
-    
-    contigs.inconsistent.plus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '+'),]$ContigID
-    contigs.inconsistent.minus <- inconsistency_info[which(inconsistency_info$SemiConsistant == '-'),]$ContigID
-    n.contigs.inconsistent.plus <- length(unique(contigs.inconsistent.plus))
-    n.contigs.inconsistent.minus <- length(unique(contigs.inconsistent.minus))
-    
-    # Reads
-    n.reads.consistant <- n.reads.total-n.reads.inconsistent.plus-n.reads.inconsistent.minus
-    reads.label = c(signif(n.reads.consistant*100/n.reads.total), signif(n.reads.inconsistent.plus*100/n.reads.total)
-                    , signif(n.reads.inconsistent.minus*100/n.reads.total))
-    
-    png(filename=paste(output.name,"_nb_total_reads.png"), width = 1024, height = 1024)
-    pie(c(n.reads.consistant, n.reads.inconsistent.plus, n.reads.inconsistent.minus), labels = paste("Percentage: ",reads.label, 
-                                                                                                     "\nAmount: ", c(n.reads.consistant, n.reads.inconsistent.plus, n.reads.inconsistent.minus)), col = tot.colors
-        , main = "Reads Taxonomy Status after classification")
-    legend("topleft", tot.names, cex = 1.5, fill = tot.colors)
-    dev.off()
-    
-    # Contigs
-    n.contigs.inconsistent <- length(unique(inconsistency_info$ContigID))
-    n.contigs.consistant <- n.contigs.total-n.contigs.inconsistent.plus-n.contigs.inconsistent.minus
-    contigs.label <-  c(signif(n.contigs.consistant*100/n.contigs.total), signif(n.contigs.inconsistent.plus*100/n.contigs.total)
-                        , signif(n.contigs.inconsistent.minus*100/n.reads.total))
-    
-    png(filename=paste(output.name,"_nb_total_contigs.png"), width = 1024, height = 1024)
-    pie(c(n.contigs.consistant, n.contigs.inconsistent.plus, n.contigs.inconsistent.minus), labels = paste("Percentage: ", contigs.label,
-                                                                                                           "\nAmount: ", c(n.contigs.consistant, n.contigs.inconsistent.plus, n.contigs.inconsistent.minus)), col = tot.colors, 
-        main = "Contigs Taxonomy Status after classification")
-    legend("topleft", tot.names, cex = 1.5, fill = tot.colors)
-    dev.off()
-  }
-}
+### DB Coverage Comparison
+# I: 
+# O: Table CSV
+
+### Statistical Measurements (TP/FP/TN/FN)
+# I:
+# O: Table CSV
