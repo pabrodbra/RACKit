@@ -3,6 +3,31 @@
 Sort out tools/folders
 Setup requirements.txt and Makefile(check)
 
+Download MetaSim
+* 
+* 'wget http://ab.inf.uni-tuebingen.de/data/software/metasim/download/V0_9_5/MetaSim_unix_0_9_5.sh'
+* 'chmod +x MetaSim_unix_0_9_5.sh'
+* './MetaSim_unix_0_9_5.sh'
+* 'rm MetaSim_unix_0_9_5.sh'
+
+OR
+
+Download Grinder (Version 0.5.4)
+* Download compressed file from 'https://sourceforge.net/projects/biogrinder/'
+* 'tar -xvzf community_images.tar.gz'
+* 'rm Grinder-0.5.4.tar.gz'
+* 'perl Makefile.PL'
+* 'make'
+* 'make install'
+
+Download MeganV6 (Version 6.10.13)
+* If not OpenJFX not installed: 'sudo apt-get install openjfx'
+* 'wget http://ab.inf.uni-tuebingen.de/data/software/megan6/download/MEGAN_Community_unix_6_10_13.sh'
+* 'chmod +x MEGAN_Community_unix_6_10_13.sh'
+* './MEGAN_Community_unix_6_10_13.sh'
+* 'rm MEGAN_Community_unix_6_10_13.sh'
+
+
 Start testing workflow with example
 
 ------

@@ -120,6 +120,8 @@ int main(int argc, char** argv){
 
 	fclose(fi);
 	fclose(fo);
+	printf("filterParsedBlast succesfully executed...\n");
+	return(0);
 }
 
 /*******************************/

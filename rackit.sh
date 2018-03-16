@@ -4,6 +4,9 @@
 #############
 ### Programs
 #############
+# RACKIT binary
+SH_DIR=$(dirname "$0")
+BIN="${SH_DIR}/bin/"
 # MEGAHIT Path
 MEGAHIT=0
 # MAKEBLASTDB Path
@@ -13,13 +16,13 @@ BLASTN=blastn
 # MEGAN Path
 MEGAN=0
 # QNUCLPARSERBLAST Path
-QNUCLPARSERBLAST=0
+QNUCLPARSERBLAST="${BIN}qnuclparserblast"
 # TAXOMAKER Path
-TAXOMAKER=0
+TAXOMAKER="${BIN}taxomaker"
 # MERGEFULLFASTA Path
-MERGEFULLFASTA=0
+MERGEFULLFASTA="${BIN}mergMultiFasta"
 # UNISEQDBCOVERAGE Path
-UNISEQDBCOVERAGE=0
+UNISEQDBCOVERAGE="${BIN}uniseqDBCoverage"
 # R Path
 RPATH=0
 
@@ -66,15 +69,17 @@ rm -r $RESULTS
 '
 ### Make blast databases
 # STATUS: WORKING (WORKING/TESTING)
-# *OPTIONAL: YES (YES/NO)
+# OPTIONAL: NO (YES/NO)
 : '
 mkdir $INTERMEDIATE_FILES
 mkdir $RESULTS
 
 ${MAKEBLASTDB} -in ${DB} -dbtype nucl -title ${REFDB_NAME} \
-    -max_file_sz 2GB -out ${REFDB_PATH} -logfile ${LOG}
+    -max_file_sz 2GB -out ${REFDB_PATH} &>> ${LOG}
+
+# OPTIONAL: YES (YES/NO)
 ${MAKEBLASTDB} -in ${CONTIGS} -dbtype nucl -title ${CONTIGDB_NAME} \
-    -max_file_sz 2GB -out ${CONTIGDB_PATH} -logfile ${LOG}
+    -max_file_sz 2GB -out ${CONTIGDB_PATH} &>> ${LOG}
 
 '
 ### Blast reads and contigs against DBs
@@ -83,19 +88,27 @@ ${MAKEBLASTDB} -in ${CONTIGS} -dbtype nucl -title ${CONTIGDB_NAME} \
 READS_REFDB_BLAST_PATH="${INTERMEDIATE_FILES}READS_VS_REFDB.blast"
 CONTIGS_REFDB_BLAST_PATH="${INTERMEDIATE_FILES}CONTIGS_VS_REFDB.blast"
 READS_CONTIGS_BLAST_PATH="${INTERMEDIATE_FILES}READS_VS_CONTIGS.blast"
+: '
 # Reads vs REFDB
 ${BLASTN} -task megablast -db ${REFDB_PATH} -evalue ${BLASTN_EVALUE} -ungapped \
-    -query ${READS} -out ${READS_REFDB_BLAST_PATH}
+    -query ${READS} -out ${READS_REFDB_BLAST_PATH} &>> ${LOG}
 # Contigs vs REFDB
 ${BLASTN} -task megablast -db ${REFDB_PATH} -evalue ${BLASTN_EVALUE} -ungapped \
-    -query ${CONTIGS} -out ${CONTIGS_REFDB_BLAST_PATH}
+    -query ${CONTIGS} -out ${CONTIGS_REFDB_BLAST_PATH} &>> ${LOG}
 # Reads vs CONTIGDB
-${BLASTN} -task megablast -db ${REFDB_PATH} -evalue ${BLASTN_EVALUE} -ungapped \
-    -query ${READS} -out ${READS_CONTIGS_BLAST_PATH}
-
+${BLASTN} -task megablast -db ${CONTIGDB_PATH} -evalue ${BLASTN_EVALUE} -ungapped \
+    -query ${READS} -out ${READS_CONTIGS_BLAST_PATH} &>> ${LOG}
+'
 ### Parse blast results
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
+PARSED_READS_REFDB_BLAST_PATH="${INTERMEDIATE_FILES}READS_VS_REFDB.pblast"
+PARSED_CONTIGS_REFDB_BLAST_PATH="${INTERMEDIATE_FILES}CONTIGS_VS_REFDB.pblast"
+PARSED_READS_CONTIGS_BLAST_PATH="${INTERMEDIATE_FILES}READS_VS_CONTIGS.pblast"
+
+${QNUCLPARSERBLAST} ${READS_REFDB_BLAST_PATH} ${PARSED_READS_REFDB_BLAST_PATH} &>> ${LOG}
+${QNUCLPARSERBLAST} ${CONTIGS_REFDB_BLAST_PATH} ${PARSED_CONTIGS_REFDB_BLAST_PATH} &>> ${LOG}
+${QNUCLPARSERBLAST} ${READS_CONTIGS_BLAST_PATH} ${PARSED_READS_CONTIGS_BLAST_PATH} &>> ${LOG}
 
 ### MEGAN
 # STATUS: TESTING (WORKING/TESTING)

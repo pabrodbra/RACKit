@@ -115,6 +115,7 @@ int main(int argc, char ** av){
 	fclose(f);
 	fclose(g);
 
+	printf("Taxomaker succesfully executed...\n");
 	return 0;
 }
 

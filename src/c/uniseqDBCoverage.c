@@ -335,7 +335,7 @@ int main(int argc, char** argv){
 	free(tf);
 
 	// Close INPUT and OUTPUT files
-	printf("Finished...\n");
+	printf("UniseqDBCoverage succesfully executed...\n");
 	fclose(fi);
 	fclose(fo);
 }
