@@ -20,6 +20,11 @@ Download Grinder (Version 0.5.4)
 * 'make'
 * 'make install'
 
+Download MegaHIT
+* 'git clone https://github.com/voutcn/megahit.git'
+* 'cd megahit'
+* 'make'
+
 Download MeganV6 (Version 6.10.13)
 * If not OpenJFX not installed: 'sudo apt-get install openjfx'
 * 'wget http://ab.inf.uni-tuebingen.de/data/software/megan6/download/MEGAN_Community_unix_6_10_13.sh'
