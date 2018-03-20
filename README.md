@@ -3,15 +3,6 @@
 Sort out tools/folders
 Setup requirements.txt and Makefile(check)
 
-Download MetaSim
-* 
-* 'wget http://ab.inf.uni-tuebingen.de/data/software/metasim/download/V0_9_5/MetaSim_unix_0_9_5.sh'
-* 'chmod +x MetaSim_unix_0_9_5.sh'
-* './MetaSim_unix_0_9_5.sh'
-* 'rm MetaSim_unix_0_9_5.sh'
-
-OR
-
 Download Grinder (Version 0.5.4)
 * Download compressed file from 'https://sourceforge.net/projects/biogrinder/'
 * 'tar -xvzf community_images.tar.gz'
@@ -31,7 +22,22 @@ Download MeganV6 (Version 6.10.13)
 * 'chmod +x MEGAN_Community_unix_6_10_13.sh'
 * './MEGAN_Community_unix_6_10_13.sh'
 * 'rm MEGAN_Community_unix_6_10_13.sh'
+* 'wget http://ab.inf.uni-tuebingen.de/data/software/megan6/download/nucl_acc2tax-Mar2018.abin.zip'
+* 'zip -d nucl_acc2tax-Mar2018.abin.zip'
+Download Blast (Version 2.7.1)
+* ''
+* ''
+* ''
 
+Download Blast2LCA
+* 'wget https://dl.google.com/go/go1.10.linux-amd64.tar.gz'
+* 'tar -xvf go1.10.linux-amd64.tar.gz'
+* 'export GOROOT=/INSTALLED_PATH/go; export PATH=$PATH:$GOROOT/bin'
+* 'go get github.com/emepyc/Blast2lca/gitaxid2bin'
+* 'go get github.com/emepyc/Blast2lca/blast2lca'
+* 'export GOPATH=$HOME/go/bin; export PATH=$PATH;$GOPATH'
+* 'wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz; wget wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/gi_taxid_prot.dmp.gz'
+* 'gunzip gi_taxid_prot.dmp.gz; tar -xzvf taxdump.tar.gz'
 
 Start testing workflow with example
 

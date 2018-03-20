@@ -25,6 +25,8 @@ INPUTS="${OUTPUT}inputs/"
 READS_FQ="${INPUTS}reads.fastq"
 READS_FA="${INPUTS}reads.fasta"
 CONTIGS="${INPUTS}contigs.fa"
+# Log
+LOG="${OUTPUT}log.txt"
 
 ### Folder checks
 # Intermediate files
@@ -38,18 +40,20 @@ mkdir -p $ASM
 if [ -d $ASSEMBLY ]; then rm -Rf $ASSEMBLY; fi
 
 ### Execution
-: '
+echo "### Now executing: grinder | Read Generation" &>> ${LOG}
 # Fasta ${GRINDER} -rf $1 -tr $2 -rd 101 uniform 10 -md poly4 3e-3 3.3e-8 -mr 80 20 -am uniform
 # FastQ
 ${GRINDER} -rf $1 -tr $2 -rd 101 uniform 10 -md poly4 3e-3 3.3e-8 -mr 80 20 -am uniform -od ${ASM} -ql 30 10 -fq 1
-mv "${ASM}grinder-reads.fastq" ${READS_FQ}
+mv "${ASM}grinder-reads.fastq" ${READS_FQ} &>> ${LOG}
 # Fastq to Fasta
-sed -n '1~4s/^@/>/p;2~4p' ${READS_FQ} > ${READS_FA}
-'
-echo "(1/2) FASTQ and FASTA reads generated"
+sed -n '1~4s/^@/>/p;2~4p' ${READS_FQ} > ${READS_FA} &>> ${LOG}
+# FORMAT (sed -E 's/^>([0-9^\s]*)[^=]*=([^\ ]*).*/>\1-\2/' file)
+sed -i -E 's/^>([0-9^\s]*)[^=]*=([^\ ]*).*/>\1-\2/' ${READS_FA} &>> ${LOG}
+echo "##! (1/2) FASTQ and FASTA reads generated" &>> ${LOG}
 
 # MEGAHIT - Assembly
-${MEGAHIT} --kmin-1pass --k-min 27 --k-step 10 --k-max 87 -r ${READS_FA} -o ${ASSEMBLY} #-t 12
-mv "${ASSEMBLY}final.contigs.fa" $CONTIGS
-echo "(2/2) Contigs assembled..."
+echo "### Now executing: megahit | Contig assembly" &>> ${LOG}
+${MEGAHIT} --kmin-1pass --k-min 27 --k-step 10 --k-max 87 -r ${READS_FA} -o ${ASSEMBLY} &>> ${LOG}#-t 12
+mv "${ASSEMBLY}final.contigs.fa" $CONTIGS &>> ${LOG}
+echo "##! (2/2) Contigs assembled..." &>> ${LOG}
 
