@@ -12,7 +12,7 @@ MAKEBLASTDB=makeblastdb
 # BLASTN Path
 BLASTN=blastn
 # MEGAN Path
-MEGAN=/home/pablorod/software/meganv6/tools/blast2lca
+MEGAN=$MEGAN
 # QNUCLPARSERBLAST Path
 QNUCLPARSERBLAST="${BIN}qnuclparserblast"
 # FILTERPARSEDBLAST Path
@@ -24,7 +24,7 @@ MERGEFULLFASTA="${BIN}mergMultiFasta"
 # UNISEQDBCOVERAGE Path
 UNISEQDBCOVERAGE="${BIN}uniseqDBCoverage"
 # R Path
-RPATH=0
+RPATH=Rscript
 
 #############
 ### Inputs

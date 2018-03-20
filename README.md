@@ -24,22 +24,24 @@ Download MeganV6 (Version 6.10.13)
 * 'rm MEGAN_Community_unix_6_10_13.sh'
 * 'wget http://ab.inf.uni-tuebingen.de/data/software/megan6/download/nucl_acc2tax-Mar2018.abin.zip'
 * 'zip -d nucl_acc2tax-Mar2018.abin.zip'
+
 Download Blast (Version 2.7.1)
-* ''
-* ''
-* ''
+* 'wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.7.1+-x64-linux.tar.gz'
+* 'tar -xzvf ncbi-blast-2.7.1+-x64-linux.tar.gz'
+* 'rm ncbi-blast-2.7.1+-x64-linux.tar.gz'
 
-Download Blast2LCA
-* 'wget https://dl.google.com/go/go1.10.linux-amd64.tar.gz'
-* 'tar -xvf go1.10.linux-amd64.tar.gz'
-* 'export GOROOT=/INSTALLED_PATH/go; export PATH=$PATH:$GOROOT/bin'
-* 'go get github.com/emepyc/Blast2lca/gitaxid2bin'
-* 'go get github.com/emepyc/Blast2lca/blast2lca'
-* 'export GOPATH=$HOME/go/bin; export PATH=$PATH;$GOPATH'
-* 'wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz; wget wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/gi_taxid_prot.dmp.gz'
-* 'gunzip gi_taxid_prot.dmp.gz; tar -xzvf taxdump.tar.gz'
+Setup Enviroment
+* 'export PATH=$PATH:/home/pablorod/software/ncbi-blast-2.7.1+/bin'
+* 'export RACKIT=/home/pablorod/software/RACC/rackit.sh'
+* 'export MEGAHIT=/home/pablorod/software/megahit/megahit'
+* 'export MEGAN=/home/pablorod/software/meganv6/tools/blast2lca'
 
-Start testing workflow with example
+
+Start testing workflow with example (Export - How to do program paths properly)
+Remake REVCO + Inconsistency finder
+Test REVCO + Inconsistency finder
+Test UniseqDBCoverage
+Test R
 
 ------
 
