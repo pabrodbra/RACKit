@@ -12,7 +12,7 @@ MAKEBLASTDB=makeblastdb
 # BLASTN Path
 BLASTN=blastn
 # MEGAN Path
-MEGAN=0
+MEGAN=/home/pablorod/software/meganv6/tools/blast2lca
 # QNUCLPARSERBLAST Path
 QNUCLPARSERBLAST="${BIN}qnuclparserblast"
 # FILTERPARSEDBLAST Path
@@ -162,11 +162,22 @@ echo "##! (11/20)  Fixed Reads vs Contig DB Parsed Blast " &>> ${LOG}
 
 echo "### Now executing: Filter Parsed Blast | Reads vs Contigs" &>> ${LOG}
 ${FILTERPARSEDBLAST} ${FIX_READS_CONTIGS} ${FILTER_READS} 0 &>> ${LOG}
-echo "##! (12/20)  Filtered Reads vs Contig DB Parsed Blast " &>> ${LOG}
+echo "##! (12/20)  Filtered Reads vs Contig DB Parsed Blast" &>> ${LOG}
 
 ### MEGAN (13-14)
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
+ACCESSION_TO_TAXA=/home/pablorod/data/ncbi_taxonomy/nucl_acc2tax-Mar2018.abin
+READ_LCA="${INTERMEDIATE_FILES}lca_reads"
+CONTIG_LCA="${INTERMEDIATE_FILES}lca_contigs"
+
+echo "### Now executing: Megan - Blast2LCA | Reads" &>> ${LOG}
+${MEGAN} -i ${READS_REFDB_BLAST_PATH} -f BlastText -m BlastN -o ${READ_LCA} -mid ${LCA_COVERAGE} -v true -a2t ${ACCESSION_TO_TAXA} &>> ${LOG}
+echo "##! (13/20)  MEGAN Reads LCA calculated" &>> ${LOG}
+
+echo "### Now executing: Megan - Blast2LCA | Contigs" &>> ${LOG}
+${MEGAN} -i ${CONTIGS_REFDB_BLAST_PATH} -f BlastText -m BlastN -o ${CONTIG_LCA} -mid ${LCA_COVERAGE} -v true -a2t ${ACCESSION_TO_TAXA} &>> ${LOG}
+echo "##! (14/20)  MEGAN Contigs LCA calculated" &>> ${LOG}
 
 ### REVCO (15)
 # STATUS: TESTING (WORKING/TESTING)
