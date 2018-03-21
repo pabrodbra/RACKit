@@ -2,7 +2,7 @@ from classes.grefco import GREFCO
 from classes.taxaLoad import TaxaLoad
 from classes.inconsistencyFinder import InconsistencyFinder
 from classes.inconsistencySolver import InconsistencySolver
-
+from classes.confusionMatrix import ConfusionMatrixCalculator
 import sys
 import time
 
@@ -53,18 +53,28 @@ def inconsistency_solver_main(read_taxa_path, contig_taxa_path, inconsistency_fi
     inc_solver = InconsistencySolver(read_taxa_path, contig_taxa_path, inconsistency_file)
     inc_solver.solve_inconsistencies(rank_filter, output)
 
-def statistical_measurements_main(output = "statistic.out"):
-    return 0
+def confusion_matrix_main(fixed_reads_blast, fixed_contigs_blast, grefco, grinder_ranks_path):
+    confusion_matrix_calc = ConfusionMatrixCalculator(fixed_reads_blast, fixed_contigs_blast, grefco, grinder_ranks_path)
+
+    tot_read = confusion_matrix_calc.read_confusion_matrix()
+    tot_cont = confusion_matrix_calc.contig_confusion_matrix()
+    confusion_matrix_calc.summarize_confusion_matrices(tot_read, tot_cont)
+    confusion_matrix_calc.calculate_statistical_measurements()
+
+    confusion_matrix_calc.write_confusion_matrix(OUTPUT_DIRECTORY + "rac-confusion_matrix.csv")
+    confusion_matrix_calc.write_statistical_measurements(OUTPUT_DIRECTORY + "rac-statistical_measurements.csv")
 
 # ----------------------
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 9:
         print("USAGE: python rackit.py <parsed_read_vs_contigs> <reads_taxon_path> <contigs_taxon_path> <rank_filter> <output_dir>")
         exit(-1)
         
     global OUTPUT_DIRECTORY
     global DEBUG
+
+    DEBUG=True
 
     # Init Args
     filter_parsed_blast_arg = sys.argv[1]
@@ -72,6 +82,9 @@ def main():
     contig_taxa_path_arg = sys.argv[3]
     rank_filter_arg = sys.argv[4]
     OUTPUT_DIRECTORY = sys.argv[5]
+    fixed_reads_blast = sys.argv[6]
+    fixed_contigs_blast = sys.argv[7]
+    grinder_ranks_path = sys.argv[8]
 
     print("############# RACKIT.py STARTED #############")
     print("--- (1/5) GREFCO started...")
@@ -95,9 +108,9 @@ def main():
     inconsistency_solver_main(read_taxa_path_arg, contig_taxa_path_arg, inconsistency_finder_output, rank_filter_arg, inconsistency_solver_output)
     print("--! (4/5) INCONSISTENCY_SOLVER finished...")
 
-    print("--- (5/5) STATISTICAL_MEASUREMENTS started...")
-
-    print("--! (5/5) STATISTICAL_MEASUREMENTS finished...")
+    print("--- (5/5) CONFUSION_MATRIX started...")
+    confusion_matrix_main(fixed_reads_blast, fixed_contigs_blast, grefco, grinder_ranks_path)
+    print("--! (5/5) CONFUSION_MATRIX finished...")
 
     print("############# REVCO FINISHED #############")
 

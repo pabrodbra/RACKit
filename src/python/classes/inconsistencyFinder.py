@@ -1,8 +1,7 @@
 from __future__ import print_function, division
-import concurrent.futures
 
 from classes.grefco import GREFCO
-from classes.taxonomyLoad import TaxonomyLoad
+from classes.taxaLoad import TaxaLoad
 
 
 class InconsistencyFinder(object):

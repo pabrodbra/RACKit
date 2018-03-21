@@ -43,6 +43,7 @@ ACCESSION_TO_TAXA=/home/pablorod/data/ncbi_taxonomy/nucl_acc2tax-Mar2018.abin
 #DB="/home/pablorod/data/metagenome/RAC_test/refsoilDB.fa"
 DB=$5
 DB_FORMAT="${5}.format"
+GRINDER_RANKS="${INTERMEDIATE_FILES}data_generation/grinder-ranks.txt"
 
 #############
 ### Outputs

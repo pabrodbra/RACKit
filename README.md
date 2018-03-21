@@ -38,8 +38,8 @@ Setup Enviroment
 
 
 Start testing workflow with example (Export - How to do program paths properly)
-Remake REVCO + Inconsistency finder
-Test REVCO + Inconsistency finder
+Remake REVCO Statistics
+Test REVCO py
 Test UniseqDBCoverage
 Test R
 
