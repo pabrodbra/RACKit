@@ -5,11 +5,26 @@ from classes.inconsistencyFinder import InconsistencyFinder
 import sys
 import time
 
+def grefco_main():
+    return 0
+
+def taxonomy_load_main(tax_level):
+    return 0,0
+
+def inconsistency_finder_main(grefco, read_tax, contig_tax, output_name):
+    return 0, 0
+
+def inconsistency_solver_main():
+    return 0
+
+def statistical_measurements_main():
+    return 0
+
 # ----------------------
 
 def main():
     if len(sys.argv) != 3:
-        print("USAGE: python rackit.py config.txt <MEGAN_folder(MustHave=Species,Family,Class)>")
+        print("USAGE: python rackit.py  [<parsed_read_vs_contigs> <Taxa_folder(Reads,Contigs inside)>] [<reads_taxon_path> <contigs_taxon_path> <rank_filter> <output> (inconsitency)]")
         exit(-1)
         
     print("############# REVCO STARTED #############")

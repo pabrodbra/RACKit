@@ -1,5 +1,5 @@
 import sys
-#from grefco import GREFCO
+from classes.grefco import GREFCO
 
 def contig_measurement(fix_blast_contigs, grefco_contig):
         tp=0
@@ -24,7 +24,7 @@ def contig_measurement(fix_blast_contigs, grefco_contig):
                         #        temp_dict[r_id] = temp_dict[r_id] + 1
                 max_v = max(temp_dict.values())
                 tops = [k for k,v in temp_dict.items() if v == max_v]
-                contig_most_representative[c_id] = tops;
+                contig_most_representative[c_id] = tops
         # GET MATRIX VALUES
         with open(fix_blast_contigs, 'r') as f:
                 for line in f:
