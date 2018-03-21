@@ -108,8 +108,8 @@ def main():
 		f.write(str(r_only) + ";" + str(c_only) + ";" + str(b_yes) + ";" + str(b_no))
 		
 	#matrix_to_png(r_mat, c_mat, max_hits_per_pixel, dim)
-	save_matrix(r_mat, "Reads"+str(dim)+".csv")
-	save_matrix(r_mat, "Contigs"+str(dim)+".csv")
+	save_matrix(r_mat, "Reads"+str(dim)+".csv", max_hits_per_pixel)
+	save_matrix(r_mat, "Contigs"+str(dim)+".csv", max_hits_per_pixel)
 
 # ---------------------
 

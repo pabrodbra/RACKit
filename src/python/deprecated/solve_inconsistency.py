@@ -1,4 +1,4 @@
-from inconsistencySolver import InconsistencySolver
+from classes.inconsistencySolver import InconsistencySolver
 
 import sys
 import time
