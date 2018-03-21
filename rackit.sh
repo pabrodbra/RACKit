@@ -170,13 +170,18 @@ echo "##! (12/20)  Filtered Reads vs Contig DB Parsed Blast" &>> ${LOG}
 # OPTIONAL: NO (YES/NO)
 READ_LCA="${INTERMEDIATE_FILES}lca_reads"
 CONTIG_LCA="${INTERMEDIATE_FILES}lca_contigs"
+READ_TAXON_PATH="${INTERMEDIATE_FILES}taxon_path_reads"
+CONTIG_TAXON_PATH="${INTERMEDIATE_FILES}taxon_path_contigs"
 
+# Format to taxon path --> sed -z 's/;[a-z]__/;/g' mod.test | sed -z 's/; [0-9]*;/;/g' | sed 's/;/,"/' | sed 's/$/"/' > test.tp
 echo "### (13/20) Now executing: Megan - Blast2LCA | Reads" &>> ${LOG}
 ${MEGAN} -i ${READS_REFDB_BLAST_PATH} -f BlastText -m BlastN -o ${READ_LCA} -mid ${LCA_COVERAGE} -v true -a2t ${ACCESSION_TO_TAXA} &>> ${LOG}
+sed -z 's/;[a-z]__/;/g' ${READ_LCA} | sed -z 's/; [0-9]*;/;/g' | sed 's/;/,"/' | sed 's/$/"/' > ${READ_TAXON_PATH}
 echo "##! (13/20)  MEGAN Reads LCA calculated" &>> ${LOG}
 
 echo "### (14/20) Now executing: Megan - Blast2LCA | Contigs" &>> ${LOG}
 ${MEGAN} -i ${CONTIGS_REFDB_BLAST_PATH} -f BlastText -m BlastN -o ${CONTIG_LCA} -mid ${LCA_COVERAGE} -v true -a2t ${ACCESSION_TO_TAXA} &>> ${LOG}
+sed -z 's/;[a-z]__/;/g' ${CONTIG_LCA} | sed -z 's/; [0-9]*;/;/g' | sed 's/;/,"/' | sed 's/$/"/' > ${CONTIG_TAXON_PATH}
 echo "##! (14/20)  MEGAN Contigs LCA calculated" &>> ${LOG}
 
 ### REVCO (15)
