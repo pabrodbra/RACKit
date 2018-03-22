@@ -68,7 +68,7 @@ def confusion_matrix_main(fixed_reads_blast, fixed_contigs_blast, grefco, grinde
 
 def main():
     if len(sys.argv) != 9:
-        print("USAGE: python rackit.py <parsed_read_vs_contigs> <reads_taxon_path> <contigs_taxon_path> <rank_filter> <output_dir>")
+        print("USAGE: python rackit.py <parsed_read_vs_contigs> <reads_taxon_path> <contigs_taxon_path> <rank_filter> <output_dir> <fixed_read_blast> <fixed_contig_blast> <grinder_ranks_path>")
         exit(-1)
         
     global OUTPUT_DIRECTORY

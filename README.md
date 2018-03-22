@@ -1,7 +1,12 @@
 # RACKit
 
-Sort out tools/folders
+Workflow designed to compare the metagenomic taxanomic analysis between reads and contigs.
+
 Setup requirements.txt and Makefile(check)
+
+Required:
+* python3
+* gcc
 
 Download Grinder (Version 0.5.4)
 * Download compressed file from 'https://sourceforge.net/projects/biogrinder/'
@@ -17,7 +22,7 @@ Download MegaHIT
 * 'make'
 
 Download MeganV6 (Version 6.10.13)
-* If not OpenJFX not installed: 'sudo apt-get install openjfx'
+* If OpenJFX not installed: 'sudo apt-get install openjfx'
 * 'wget http://ab.inf.uni-tuebingen.de/data/software/megan6/download/MEGAN_Community_unix_6_10_13.sh'
 * 'chmod +x MEGAN_Community_unix_6_10_13.sh'
 * './MEGAN_Community_unix_6_10_13.sh'
@@ -35,7 +40,6 @@ Setup Enviroment
 * 'export RACKIT=/home/pablorod/software/RACC/rackit.sh'
 * 'export MEGAHIT=/home/pablorod/software/megahit/megahit'
 * 'export MEGAN=/home/pablorod/software/meganv6/tools/blast2lca'
-
 
 Start testing workflow with example (Export - How to do program paths properly)
 Remake REVCO Statistics

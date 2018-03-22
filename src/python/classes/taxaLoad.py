@@ -22,7 +22,7 @@ class TaxaLoad(object):
 
         with open(self.taxon_path, 'r') as f:
             for line in f:
-                items = line.replace('\n', '').split[',']
+                items = line.replace('\n', '').split(',')
                 seq_id = items[0]
                 try:
                     assigned_taxa = items[1].replace('"', '').split(';')[taxa_level_dict[rank]]
