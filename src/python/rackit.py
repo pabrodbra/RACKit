@@ -95,13 +95,13 @@ def main():
     print("--- (2/5) TAXA_LOAD started...")
     print("<-> Species")
     species_read_tax, species_contig_tax = taxonomy_load_main(read_taxa_path_arg, contig_taxa_path_arg, tax_level="Specie")
-    print("--- (2/5) TAXONOMY_LOAD finished...")
+    print("--! (2/5) TAXONOMY_LOAD finished...")
 
 
     print("--- (3/5) INCONSISTENCY_FINDER started...")
     inconsistency_finder_output = OUTPUT_DIRECTORY + "inc_finder.out"
     inconsistency_finder_main(grefco, species_read_tax, species_contig_tax, inconsistency_finder_output)
-    print("--- (3/5) INCONSISTENCY_FINDER finished...")
+    print("--! (3/5) INCONSISTENCY_FINDER finished...")
 
     print("--- (4/5) INCONSISTENCY_SOLVER started...")
     inconsistency_solver_output = OUTPUT_DIRECTORY + "inc_solver.out"

@@ -136,10 +136,12 @@ class ConfusionMatrixCalculator(object):
 
     def write_confusion_matrix(self, output="rac-confusion_matrix.csv"):
         with open(output, 'w') as f:
+            f.write("TruePositive;FalsePositive;TrueNegative;FalseNegative")
             f.write(confusion_matrix_to_string(self.final_read_cm))
             f.write(confusion_matrix_to_string(self.final_contig_cm))
 
     def write_statistical_measurements(self, output="rac-statistical_measurements.csv"):
         with open(output, 'w') as f:
+            f.write("Sensitivity;Specificity;Fallout;Precision;Accuracy")
             f.write(statistical_measurements_to_string(self.final_read_sm))
             f.write(statistical_measurements_to_string(self.final_contig_sm))
