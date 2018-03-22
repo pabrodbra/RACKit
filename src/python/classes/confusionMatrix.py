@@ -45,7 +45,7 @@ class ConfusionMatrixCalculator(object):
             for line in f:
                 items = line.split(' ')
                 r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
-                r_match = items[1].rsplit('.')[0][1:] # >NC_014963.1.1 -> NC_014963.1
+                r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
                 
                 for specie, s_cm in self.reads_all_confusion_matrix.items():
                     if (r_match == specie):
@@ -55,7 +55,7 @@ class ConfusionMatrixCalculator(object):
                             s_cm["fp"] += 1
                     
                     if (r_match != specie):
-                        if(r_match != r_id):
+                        if(r_match == r_id):
                             s_cm["tn"] += 1
                         else:
                             s_cm["fn"] += 1
@@ -70,7 +70,7 @@ class ConfusionMatrixCalculator(object):
                 temp_dict = {}
                 asm_reads = self.grefco.contig_dictionary.get(c_id, None)
                 for t_read in asm_reads:
-                        r_id = t_read[0].rsplit('.',1)[0]
+                        r_id = t_read[0].rsplit('-',1)[1]
                         temp_dict[r_id] = temp_dict.get(r_id, 0) + 1
                 max_v = max(temp_dict.values())
                 tops = [k for k,v in temp_dict.items() if v == max_v]
@@ -86,10 +86,10 @@ class ConfusionMatrixCalculator(object):
             # >k67_1 flag=1 multi=2.0000 len=207 >NC_014963.1.1  5095226 1;0;207;207;100;0;0;+-;1;207;4289335;4289129
             for line in f:
                 items = line.split(' ')
-                contig_id = items[0][1:] # >k67_1 -> NC_014963.1
-                contig_match = items[4][1:] # >NC_014963.1.1 -> NC_014963.1
-                
-                representatives = contig_most_representative.get(contig_id, None)
+                contig_id = items[0][1:] # >k67_1 -> k67_1
+                contig_match = items[4][1:].rsplit('.',1)[0] # >NC_014963.1.1 -> NC_014963.1
+                # print(contig_id); print(contig_match)
+                representatives = contig_most_representative.get(contig_id, None) #; print(representatives); input()
                 if representatives is not None:
                     for top_read in representatives:
                         for specie, s_cm in self.contigs_all_confusion_matrix.items():
@@ -100,7 +100,7 @@ class ConfusionMatrixCalculator(object):
                                     s_cm["fp"] += 1
                             
                             if (contig_match != specie):
-                                if(contig_match != top_read):
+                                if(contig_match == top_read):
                                     s_cm["tn"] += 1
                                 else:
                                     s_cm["fn"] += 1
@@ -109,8 +109,8 @@ class ConfusionMatrixCalculator(object):
         return total
 
     def summarize_confusion_matrices(self, total_reads, total_contigs):
-        reads_final_cm = make_confusion_matrix_dict()
-        contigs_final_cm = make_confusion_matrix_dict()
+        reads_final_cm = make_confusion_matrix_dict(); print(self.reads_all_confusion_matrix)
+        contigs_final_cm = make_confusion_matrix_dict(); print(self.contigs_all_confusion_matrix)
 
         for specie, confusion_matrix in self.reads_all_confusion_matrix.items():
             reads_final_cm["tp"] += confusion_matrix["tp"]/float(total_reads)
@@ -124,7 +124,7 @@ class ConfusionMatrixCalculator(object):
             contigs_final_cm["fp"] += confusion_matrix["fp"]/float(total_contigs)
             contigs_final_cm["fn"] += confusion_matrix["fn"]/float(total_contigs)
 
-        self.final_read_cm = reads_final_cm
+        self.final_read_cm = reads_final_cm; print(reads_final_cm)
         self.final_contig_cm = contigs_final_cm
 
     def calculate_statistical_measurements(self):

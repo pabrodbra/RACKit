@@ -54,7 +54,7 @@ class InconsistencySolver(object):
                         else:
                             read_top_taxo = self.reads_path_dict[read_id][read_top_rank-1]
                     if contig_id in self.contigs_path_dict:
-                        contig_top_rank = len(self.contigs_path_dict[contig_id]); print(contig_top_rank); print(self.contigs_path_dict)
+                        contig_top_rank = len(self.contigs_path_dict[contig_id])
                         if (contig_top_rank == 0):
                             contig_top_rank = -1
                             contig_top_taxo = "Unassigned"
