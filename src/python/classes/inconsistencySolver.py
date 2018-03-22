@@ -1,5 +1,14 @@
 from __future__ import print_function, division
 
+taxa_level_dict = {
+    "Specie": -1,
+    "Genus": -2,
+    "Family": -3,
+    "Class" : -4,
+    "Phylum": -5,
+    "Order": -6,
+    "Domain": -7
+}
 class InconsistencySolver(object):
     def __init__(self, reads_taxo_path, contigs_taxo_path, inconsistencies_file):
         self.inconsistency_file = inconsistencies_file
@@ -38,10 +47,10 @@ class InconsistencySolver(object):
 
                     # Get Top Rank + Taxo
                     if read_id in self.reads_path_dict:
-                        read_top_rank = len(self.reads_path_dict[read_id])
+                        read_top_rank = len(self.reads_path_dict[read_id]); print(read_top_rank); print(self.reads_path_dict)
                         read_top_taxo = self.reads_path_dict[read_id][read_top_rank-1]
                     if contig_id in self.contigs_path_dict:
-                        contig_top_rank = len(self.contigs_path_dict[contig_id])
+                        contig_top_rank = len(self.contigs_path_dict[contig_id]); print(contig_top_rank); print(self.contigs_path_dict)
                         contig_top_taxo = self.contigs_path_dict[contig_id][contig_top_rank-1]
 
                     # Get Solvable + RanksToSolve + RankSolved + Type
