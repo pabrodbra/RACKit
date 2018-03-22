@@ -1,6 +1,15 @@
 #!/bin/bash
 # RACKit Workflow by Pablo Rodríguez Brazzarola
 
+
+# Output Directory Path
+#OUTPUT="/home/pablorod/results/rac_test/"
+OUTPUT=$4
+# Output folders
+INTERMEDIATE_FILES="${OUTPUT}intermediateFiles/"
+RESULTS="${OUTPUT}results/"
+INPUT="${OUTPUT}inputs/"
+
 #############
 ### Programs
 #############
@@ -49,12 +58,6 @@ DB_FORMAT="${DB}.format"
 #############
 ### Outputs
 #############
-# Output Directory Path
-#OUTPUT="/home/pablorod/results/rac_test/"
-OUTPUT=$4
-# Output folders
-INTERMEDIATE_FILES="${OUTPUT}intermediateFiles/"
-RESULTS="${OUTPUT}results/"
 
 # Reference Database
 DB="${INTERMEDIATE_FILES}REFDB.fa"
@@ -208,25 +211,22 @@ echo "##! (15/20)  RACKIT Python ToolKit finished successfully" &>> ${LOG}
 UNI_DB="${INTERMEDIATE_FILES}UNI_REFDB.fa"
 TAXO_FILE="${DB_FORMAT}.taxo"
 echo "### (16/20) Now executing: Taxomaker" &>> ${LOG}
-${TAXOMAKER} ${DB_FORMAT} 0
+${TAXOMAKER} ${DB_FORMAT} 0 &>> ${LOG}
 echo "##! (16/20)  Taxomaker finished successfully" &>> ${LOG}
 
 # MERGEMULTIFAST (17)
 echo "### (17/20) Now executing: MergeMultiFasta" &>> ${LOG}
-${MERGEFULLFASTA} ${DB} ${UNI_DB}
+${MERGEFULLFASTA} ${DB} ${UNI_DB} &>> ${LOG}
 echo "##! (17/20)  MergeMultiFasta finished successfully" &>> ${LOG}
 
 # UNISEQDBCOVERAGE (18)
 COVERAGE_OUTPUT="${RESULTS}coverage.info"
-INPUT="${OUTPUT}inputs/"
-READS_FASTA="${INPUT}reads.fasta"
-CONTIGS_FASTA="${INPUT}contigs.fa"
 
-N_READS=$(grep -c '>' ${READS_FASTA})
-N_CONTIGS=$(grep -c '>' ${CONTIGS_FASTA})
+N_READS=$(grep -c '>' ${READS})
+N_CONTIGS=$(grep -c '>' ${CONTIGS})
 
 echo "### (18/20) Now executing: UniseqDBCoverage" &>> ${LOG}
-${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERAGE_OUTPUT} ${N_READS} ${N_CONTIGS}
+${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERAGE_OUTPUT} ${N_READS} ${N_CONTIGS} &>> ${LOG}
 echo "##! (18/20)  UniseqDBCoverage finished successfully" &>> ${LOG}
 
 ### R Results (20)
