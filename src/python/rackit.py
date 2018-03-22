@@ -22,7 +22,7 @@ def grefco_main(filtered_file_name, output_extension = ".grefco"):
     return grefco
 
 
-def taxonomy_load_main(read_taxa_path, contigs_taxa_path, tax_level="Species"):
+def taxonomy_load_main(read_taxa_path, contigs_taxa_path, tax_level="Specie"):
     read_taxa_load = TaxaLoad(read_taxa_path, rank=tax_level)
     contig_taxa_load = TaxaLoad(contigs_taxa_path, rank=tax_level)
 
@@ -94,7 +94,7 @@ def main():
 
     print("--- (2/5) TAXA_LOAD started...")
     print("<-> Species")
-    species_read_tax, species_contig_tax = taxonomy_load_main(read_taxa_path_arg, contig_taxa_path_arg, tax_level="Species")
+    species_read_tax, species_contig_tax = taxonomy_load_main(read_taxa_path_arg, contig_taxa_path_arg, tax_level="Specie")
     print("--- (2/5) TAXONOMY_LOAD finished...")
 
 

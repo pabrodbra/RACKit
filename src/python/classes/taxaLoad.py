@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 
 taxa_level_dict = {
-    "Specie": 6,
-    "Genus": 5,
-    "Family": 4,
-    "Class" : 3,
-    "Phylum": 2,
-    "Order": 1,
-    "Domain": 0
+    "Specie": -1,
+    "Genus": -2,
+    "Family": -3,
+    "Class" : -4,
+    "Phylum": -5,
+    "Order": -6,
+    "Domain": -7
 }
 
 class TaxaLoad(object):
@@ -25,7 +25,7 @@ class TaxaLoad(object):
                 items = line.replace('\n', '').split(',')
                 seq_id = items[0]
                 try:
-                    assigned_taxa = items[1].replace('"', '').split(';')[taxa_level_dict[rank]]
+                    assigned_taxa = items[1].replace('"', '').split(';')[:-1][taxa_level_dict[rank]]; print(assigned_taxa)
                     self.taxonomy_dictionary[seq_id] = assigned_taxa
                 except:
                     pass
