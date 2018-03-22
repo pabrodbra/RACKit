@@ -20,7 +20,7 @@ FILTERPARSEDBLAST="${BIN}filterParsedBlast"
 # TAXOMAKER Path
 TAXOMAKER="${BIN}taxomaker"
 # MERGEFULLFASTA Path
-MERGEFULLFASTA="${BIN}mergMultiFasta"
+MERGEFULLFASTA="${BIN}mergeMultiFasta"
 # UNISEQDBCOVERAGE Path
 UNISEQDBCOVERAGE="${BIN}uniseqDBCoverage"
 # R Path
@@ -44,8 +44,7 @@ ACCESSION_TO_TAXA=/home/pablorod/data/ncbi_taxonomy/nucl_acc2tax-Mar2018.abin
 # Database fasta Path
 #DB="/home/pablorod/data/metagenome/RAC_test/refsoilDB.fa"
 DB=$5
-DB_FORMAT="${5}.format"
-GRINDER_RANKS="${INTERMEDIATE_FILES}data_generation/grinder-ranks.txt"
+DB_FORMAT="${DB}.format"
 
 #############
 ### Outputs
@@ -56,6 +55,14 @@ OUTPUT=$4
 # Output folders
 INTERMEDIATE_FILES="${OUTPUT}intermediateFiles/"
 RESULTS="${OUTPUT}results/"
+
+# Reference Database
+DB="${INTERMEDIATE_FILES}REFDB.fa"
+cp $5 $DB
+DB_FORMAT="${DB}.format"
+
+# Grinder Ranks
+GRINDER_RANKS="${INTERMEDIATE_FILES}data_generation/grinder-ranks.txt"
 
 # Log
 LOG="${OUTPUT}log.txt"
@@ -191,8 +198,7 @@ echo "##! (14/20)  MEGAN Contigs LCA calculated" &>> ${LOG}
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
 echo "### (15/20) Now executing: RACKIT Python ToolKit" &>> ${LOG}
-intermediateFiles/fixed_reads.pblast intermediateFiles/fixed_contigs.pblast intermediateFiles/data_generation/grinder-ranks.txt
-${RACKIT_PY} ${FIX_READS_CONTIGS} ${READ_TAXON_PATH} ${CONTIG_TAXON_PATH} 10 ${RESULTS} ${FIX_READS} ${FIX_CONTIGS} ${GRINDER_RANKS}
+${RACKIT_PY} ${FIX_READS_CONTIGS} ${READ_TAXON_PATH} ${CONTIG_TAXON_PATH} 10 ${RESULTS} ${FIX_READS} ${FIX_CONTIGS} ${GRINDER_RANKS} &>> ${LOG}
 echo "##! (15/20)  RACKIT Python ToolKit finished successfully" &>> ${LOG}
 
 ### DB Coverage (16)
@@ -200,9 +206,9 @@ echo "##! (15/20)  RACKIT Python ToolKit finished successfully" &>> ${LOG}
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: YES (YES/NO)
 UNI_DB="${INTERMEDIATE_FILES}UNI_REFDB.fa"
-TAXO_FILE=""
+TAXO_FILE="${DB_FORMAT}.taxo"
 echo "### (16/20) Now executing: Taxomaker" &>> ${LOG}
-${TAXOMAKER} ${DB} 0 
+${TAXOMAKER} ${DB_FORMAT} 0
 echo "##! (16/20)  Taxomaker finished successfully" &>> ${LOG}
 
 # MERGEMULTIFAST (17)
@@ -211,12 +217,16 @@ ${MERGEFULLFASTA} ${DB} ${UNI_DB}
 echo "##! (17/20)  MergeMultiFasta finished successfully" &>> ${LOG}
 
 # UNISEQDBCOVERAGE (18)
-FIX_READS="{INTERMEDEIATE_FILES}fixed_reads.pblast"
-FIX_CONTIGS="{INTERMEDEIATE_FILES}fixed_contigs.pblast"
 COVERAGE_OUTPUT="${RESULTS}coverage.info"
+INPUT="${OUTPUT}inputs/"
+READS_FASTA="${INPUT}reads.fasta"
+CONTIGS_FASTA="${INPUT}contigs.fa"
+
+N_READS=$(grep -c '>' ${READS_FASTA})
+N_CONTIGS=$(grep -c '>' ${CONTIGS_FASTA})
 
 echo "### (18/20) Now executing: UniseqDBCoverage" &>> ${LOG}
-${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERAGE_OUTPUT}
+${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERAGE_OUTPUT} ${N_READS} ${N_CONTIGS}
 echo "##! (18/20)  UniseqDBCoverage finished successfully" &>> ${LOG}
 
 ### R Results (20)
