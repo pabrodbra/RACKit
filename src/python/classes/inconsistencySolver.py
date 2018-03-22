@@ -47,11 +47,19 @@ class InconsistencySolver(object):
 
                     # Get Top Rank + Taxo
                     if read_id in self.reads_path_dict:
-                        read_top_rank = len(self.reads_path_dict[read_id]); print(read_top_rank); print(self.reads_path_dict)
-                        read_top_taxo = self.reads_path_dict[read_id][read_top_rank-1]
+                        read_top_rank = len(self.reads_path_dict[read_id])
+                        if (read_top_rank == 0):
+                            read_top_rank = -1
+                            read_top_taxo = "Unassigned"
+                        else:
+                            read_top_taxo = self.reads_path_dict[read_id][read_top_rank-1]
                     if contig_id in self.contigs_path_dict:
                         contig_top_rank = len(self.contigs_path_dict[contig_id]); print(contig_top_rank); print(self.contigs_path_dict)
-                        contig_top_taxo = self.contigs_path_dict[contig_id][contig_top_rank-1]
+                        if (contig_top_rank == 0):
+                            contig_top_rank = -1
+                            contig_top_taxo = "Unassigned"
+                        else:
+                            contig_top_taxo = self.contigs_path_dict[contig_id][contig_top_rank-1]
 
                     # Get Solvable + RanksToSolve + RankSolved + Type
                     if read_top_rank != -1 and contig_top_rank != -1:   # Can be solved
