@@ -9,6 +9,8 @@ OUTPUT=$4
 INTERMEDIATE_FILES="${OUTPUT}intermediateFiles/"
 RESULTS="${OUTPUT}results/"
 INPUT="${OUTPUT}inputs/"
+mkdir -p $INTERMEDIATE_FILES
+mkdir -p $RESULTS
 
 #############
 ### Programs
@@ -79,9 +81,6 @@ CONTIGDB_PATH="${INTERMEDIATE_FILES}${CONTIGDB_NAME}"
 ##########################
 ### --- Execution --- ####
 ##########################
-mkdir -p $INTERMEDIATE_FILES
-mkdir -p $RESULTS
-
 if [ "$#" -ne 5 ]; then
         echo "***USAGE*** rackit.sh <reads> <contigs> <lca_fold> <output> [<reference.fasta::or::ref_db_path>]"
         exit 1
