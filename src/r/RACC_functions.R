@@ -5,19 +5,25 @@ library(ggplot2)
 library(reshape2)
 
 # Constants
-rank.names <- c("Species","Genus","Family","Order","Class","Phylum","Kingdom","Domain", "Organism")
+rank.names <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 inconsistency.types <- c("WR","WC","H")
 plot.width <- 1024
 plot.height <- 1024
+plot.width.in <- 12
+plot.height.in <- 12
 
-#1 BEAR pa file -> orig.distro.per.taxa
+#1 GRINDER Rank -> orig.distro.per.taxa
 #2 MEGAN Reads Distro per Taxa -> reads.distro.per.taxa
 #3 MEGAN Contigs Distro per Taxa -> contigs.distro.per.taxa
+### Helpers
+is.nan.data.frame <- function(x){
+  do.call(cbind, lapply(x, is.nan))
+}
 
 ### Prepare descendant original, reads and contigs distro data + absolute difference relative to original
-# I: 1,2,3
+# I: original.distro.file, read.distro.file, contig.distro.file
 # O: Normalized data
-preprocess_distribution_data() <- function(original.distro.path, reads.distro.path, contigs.distro.path){
+preprocess_distribution_data <- function(original.distro.path, reads.distro.path, contigs.distro.path){
   # original.distro.path <- .pa BEAR file | reads/contigs.distro.path <- MEGANv6 distribution
   original.distro.per.specie <- read.csv(original.distro.path, header=FALSE, sep = '\t')
   reads.distro.per.specie <- read.csv(reads.distro.path, header=FALSE, sep = ',')
@@ -66,11 +72,11 @@ preprocess_distribution_data() <- function(original.distro.path, reads.distro.pa
 }
 
 ### Original Distro
-# I: 1
+# I: original.distro.file
 # O: Plot
-original_distribution_plot <- function(orig.desc, reads.desc, contigs.desc, output.path){
+original_distribution_plot <- function(orig.desc, output.path){
   # Distribution lines
-  sort.data <- data.frame(orig=orig.desc,reads=reads.desc,contig=contigs.desc)
+  sort.data <- data.frame(orig=orig.desc)
   sort.data <- sort.data[order(sort.data$orig, decreasing = TRUE),]
   
   # Plot
@@ -86,7 +92,7 @@ original_distribution_plot <- function(orig.desc, reads.desc, contigs.desc, outp
 }
 
 ### Distro Comparison
-# I: 1,2,3
+# I: original.distro.file, read.distro.file, contig.distro.file
 # O: Plot
 distribution_comparison_plot <- function(orig.desc, reads.desc, contigs.desc, output.path){
   # Distribution lines
@@ -123,16 +129,12 @@ rmse_comparison <- function(orig.desc, reads.desc, contigs.desc){
   return(ret)
 }
 
-### Inconsistencies Found
-# I: 
-# O: Table CSV
-
-#--------------TODO
-
 ### Inconsistency Resolution
 # I: Solved_Inconsistencies_CSV
 # O: Plot
-inconsistency_resolution <- function(solved_inconsistencies_csv, output.path){
+inconsistency_resolution <- function(solved_inconsistencies_csv, 
+                                     output.path="IMG-inconsistency_solver.png",
+                                     img.title = "Taxonomic rank where Inconsistencies are Solved"){
     # Load data
     solved.data <-read.csv2(solved_inconsistencies_csv, header = TRUE, sep = ',')
 
@@ -142,12 +144,12 @@ inconsistency_resolution <- function(solved_inconsistencies_csv, output.path){
     # Where are Inconsistencies Solved
     count.rank.solved.inconsistency <- sapply(1:length(rank.solved.inconsistency), function(x)
         sum(solved.data$RankSolved == rank.solved.inconsistency[[x]]))
-    names(count.rank.solved.inconsistency) <- rank.names
+    names(count.rank.solved.inconsistency) <- rank.names[rank.solved.inconsistency]
 
     # Summed where are Inconsistencies Solved
     sum.solved.ranks <- sapply(1:length(count.rank.solved.inconsistency), function(x)
         sum(count.rank.solved.inconsistency[1:x]))
-    names(sum.solved.ranks) <- rank.names
+    names(sum.solved.ranks) <- rank.names[rank.solved.inconsistency]
 
     # Type of Inconsistencies
     count.types <- sapply(1:length(inconsistency.types), function(x)
@@ -163,7 +165,7 @@ inconsistency_resolution <- function(solved_inconsistencies_csv, output.path){
         sum(solved.data$RankSolved[which(solved.data$Type == "H")] == rank.solved.inconsistency[[x]]))
 
     solved.inconsistencies.per.type <- rbind(solved.inconsistencies.WR, solved.inconsistencies.WC, solved.inconsistencies.H)
-    colnames(solved.inconsistencies.per.type) <- rank.names
+    colnames(solved.inconsistencies.per.type) <- rank.names[rank.solved.inconsistency]
 
     # Sum where Inconsistencies are Solved per Inconsistency Type
     sum.solved.ranks.WR <- sapply(1:length(count.rank.solved.inconsistency), function(x)
@@ -174,28 +176,30 @@ inconsistency_resolution <- function(solved_inconsistencies_csv, output.path){
     sum(solved.inconsistencies.per.type[3,1:x]))
 
     sum.solved.ranks.per.type <- rbind(sum.solved.ranks.WR,sum.solved.ranks.WC,sum.solved.ranks.H)
-    colnames(sum.solved.ranks.per.type) <- rank.names
+    
+    colnames(sum.solved.ranks.per.type) <- rank.names[rank.solved.inconsistency]
 
     # Normalize
     normalize.sum.solved.ranks.per.type <- sum.solved.ranks.per.type*100/c(sum.solved.ranks.per.type[,ncol(sum.solved.ranks.per.type)])  #as.matrix(sum.solved.ranks.per.type)
+    normalize.sum.solved.ranks.per.type[is.nan.data.frame(normalize.sum.solved.ranks.per.type)] <- 0
     # Melt
     melt.sum.solved.ranks.per.type <-melt(normalize.sum.solved.ranks.per.type,id.vars=names(normalize.sum.solved.ranks.per.type))
     # Plot
-    png(filename = output.path, width = plot.width, height = plot.height)
+    #png(filename = output.path, width = plot.width, height = plot.height)
     ggplot(melt.sum.solved.ranks.per.type,aes(x=factor(Var2),y=value,fill=factor(Var1)))+
         geom_bar(stat="identity",position="dodge")+
         scale_fill_brewer(palette = "Set1", name="Inconsistency Type",
                         labels=c("Weak Reads", "Weak Contigs", "Hard"))+
         xlab("Taxonomic Rank")+
         ylab("Percentage of Inconsistencies Solved")+
-        ggtitle("Taxonomic rank where Inconsistencies are Solved (FSD)", subtitle = "Percentage for each Type")+
+        ggtitle(img.title, subtitle = "Percentage for each Type")+
         theme(axis.title = element_text(size=22),
             axis.text = element_text(size=18),
             plot.title =element_text(size=25,face="bold"),
             plot.subtitle = element_text(size=18),
             legend.text=element_text(size=15),
             legend.title =element_text(size=18))
-    dev.off()
+    ggsave(filename = output.path, width = plot.height.in, height = plot.height.in, units = 'in')
 
     output.return <- list(
         "count.rank.solved.inconsistency" = count.rank.solved.inconsistency,
@@ -210,24 +214,24 @@ inconsistency_resolution <- function(solved_inconsistencies_csv, output.path){
 
 
 ### DB Coverage Comparison
-# I: 
+# I: coverage.info
 # O: Table CSV
-covarage_comparison <- function(coverage.info.path){
+coverage_comparison <- function(coverage.info.path){
   # Load data
   coverage.info <- read.csv2(coverage.info.path, header=TRUE, sep = '\t')
-  coverage.info <- coverage.info[c("ReadOnly", "BothYes", "ContigOnly", "BothNo")]
+  #coverage.info <- coverage.info[c("ReadHits", "ContigHits", "BothYes",  "BothNo",)]
   coverage.total <- sum(as.numeric(coverage.info))
   
   coverage.percentage <- c(signif(coverage.info[1]*100/coverage.total), signif(coverage.info[2]*100/coverage.total)
                       , signif(coverage.info[3]*100/coverage.total), signif(coverage.info[4]*100/coverage.total))
   
   ret <- list(
-    "read.only.cov" = coverage.percentage[1],
-    "contig.only.cov" = coverage.percentage[3],
-    "read.total.cov" = coverage.percentage[1] + coverage.percentage[2],
-    "contig.total.cov" = coverage.percentage[3] + coverage.percentage[2],
-    "shared.cov" = coverage.percentage[2],
-    "not.cov" = coverage.percentage[4]
+    "read.only.cov" = coverage.percentage$ReadHits,
+    "contig.only.cov" = coverage.percentage$ContigHits,
+    "read.total.cov" = coverage.percentage$ReadHits + coverage.percentage$BothYes,
+    "contig.total.cov" = coverage.percentage$ContigHits + coverage.percentage$BothYes,
+    "shared.cov" = coverage.percentage$BothYes,
+    "not.cov" = coverage.percentage$BothNo
   )
   
   return (ret)
@@ -235,6 +239,12 @@ covarage_comparison <- function(coverage.info.path){
 
 ### Statistical Measurements (TP/FP/TN/FN)
 # I:
+# O: Table CSV
+
+#--------------TODO
+
+### Inconsistencies Found
+# I: 
 # O: Table CSV
 
 

@@ -109,8 +109,8 @@ class ConfusionMatrixCalculator(object):
         return total
 
     def summarize_confusion_matrices(self, total_reads, total_contigs):
-        reads_final_cm = make_confusion_matrix_dict(); print(self.reads_all_confusion_matrix)
-        contigs_final_cm = make_confusion_matrix_dict(); print(self.contigs_all_confusion_matrix)
+        reads_final_cm = make_confusion_matrix_dict() #; print(self.reads_all_confusion_matrix)
+        contigs_final_cm = make_confusion_matrix_dict() #; print(self.contigs_all_confusion_matrix)
 
         for specie, confusion_matrix in self.reads_all_confusion_matrix.items():
             reads_final_cm["tp"] += confusion_matrix["tp"]/float(total_reads)
@@ -136,12 +136,12 @@ class ConfusionMatrixCalculator(object):
 
     def write_confusion_matrix(self, output="rac-confusion_matrix.csv"):
         with open(output, 'w') as f:
-            f.write("TruePositive;FalsePositive;TrueNegative;FalseNegative")
-            f.write(confusion_matrix_to_string(self.final_read_cm))
-            f.write(confusion_matrix_to_string(self.final_contig_cm))
+            f.write("TruePositive;FalsePositive;TrueNegative;FalseNegative\n")
+            f.write(confusion_matrix_to_string(self.final_read_cm)+"\n")
+            f.write(confusion_matrix_to_string(self.final_contig_cm)+"\n")
 
     def write_statistical_measurements(self, output="rac-statistical_measurements.csv"):
         with open(output, 'w') as f:
-            f.write("Sensitivity;Specificity;Fallout;Precision;Accuracy")
-            f.write(statistical_measurements_to_string(self.final_read_sm))
-            f.write(statistical_measurements_to_string(self.final_contig_sm))
+            f.write("Sensitivity;Specificity;Fallout;Precision;Accuracy\n")
+            f.write(statistical_measurements_to_string(self.final_read_sm)+"\n")
+            f.write(statistical_measurements_to_string(self.final_contig_sm)+"\n")
