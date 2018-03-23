@@ -237,12 +237,12 @@ int main(int argc, char** argv){
 	char name[250];
 	strcpy(name, argv[5]);
 
-	if((fseq=fopen(strcat(name,"READS.seq"),"wt"))==NULL){
-		terror("Can't open FSEQ file");
+	if((fseq=fopen(strcat(name,"_reads.mat"),"wt"))==NULL){
+		terror("Can't open MAT file");
 	}
 	strcpy(name, argv[5]);
-	if((fseq_c=fopen(strcat(name,"CONTIGS.seq"),"wt"))==NULL){
-		terror("Can't open FSEQ file");
+	if((fseq_c=fopen(strcat(name,"_contigs.mat"),"wt"))==NULL){
+		terror("Can't open MAT file");
 	}
 	strcpy(name, argv[5]);
 	if((finfo=fopen(strcat(name,".info"),"wt"))==NULL){
@@ -455,7 +455,7 @@ int parsePBI(char * buffer, struct ParsedBlastInfo* pbi){
 	scan=sscanf(buffer,"%[^;];%f;%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64";%[^;];%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64"\n",
 				&pbi->seqInfo, &pbi->score, &pbi->identity, &pbi->length, &pbi->similarity, &pbi->i_gaps, &pbi->e_gaps, &pbi->strand, &pbi->r_start, &pbi->r_end, &pbi->g_start, &pbi->g_end);
 
-	//DEBUG | printParsedBlastInfo(pbi);
+	//DEBUG |	printParsedBlastInfo(pbi); getchar();
 
 	return scan;
 }
@@ -466,8 +466,9 @@ int parseSeqInfo(char* seqInfo, struct PBISeqInfo* psi){
 
 	scan = sscanf(seqInfo, ">%[^>]>%[^ ] %"PRIu64" %"PRIu64,
 		&psi->readID, &psi->genomeID, &psi->genLength, &psi->k_BLAST);
+	psi->genomeID[strlen(psi->genomeID)-2]='\0';
 
-	//DEBUG | printPBISeqInfo(psi);
+	//DEBUG |	printPBISeqInfo(psi); getchar();
 	return scan;
 }
 // Print ParsedBlastInfo structure
@@ -505,8 +506,8 @@ int64_t retrieveRefLength(struct TaxoFile * tf, struct PBISeqInfo psi){
 
 	ti = tf->items[current_hash];
 	while(FOUND == 0 && ti != NULL){
-		/*printf("G1: |%s|%d|\n", psi.genomeID, hashSequenceID(psi.genomeID, tf->num_items));
-		printf("G2: |%s|%d|\n", ti->taxoName, hashSequenceID(ti->taxoName, tf->num_items));*/
+		//printf("G1: |%s|%d|\n", psi.genomeID, hashSequenceID(psi.genomeID, tf->num_items));
+		//printf("G2: |%s|%d|\n", ti->taxoName, hashSequenceID(ti->taxoName, tf->num_items));
 
 		if(strcmp(psi.genomeID, ti->taxoName)==0){
 			FOUND = 1;
@@ -562,7 +563,7 @@ void makeTaxoFile(char* filename, struct TaxoFile * tf){
 
 	initTaxoFile(tf, tf_size);
     // Read line by line and create new TaxoItem
-    int counter = 0;
+	int counter = 0;
 	while(!feof(fi)){
 
 		fgets(buffer, MAX_BUFFER, fi);
@@ -577,7 +578,7 @@ void makeTaxoFile(char* filename, struct TaxoFile * tf){
 		// If read properly, then add TaxoItem to TaxoFile
 		if(scan==3){
 			temp_hash = hashSequenceID(new_ti.taxoName, tf_size);
-						
+			//printf("Current hash: %d\n", temp_hash);
 			if(tf->items[temp_hash]->taxoID == -1){
 				tf->items[temp_hash]->taxoID = new_ti.taxoID;
 				tf->items[temp_hash]->refLength = new_ti.refLength;
@@ -601,5 +602,5 @@ void makeTaxoFile(char* filename, struct TaxoFile * tf){
 			counter++;
 		}
 	}
-	//printf("Counter: %d\n", counter);
+	//printf("Counter: %d\n", counter); getchar();
 }

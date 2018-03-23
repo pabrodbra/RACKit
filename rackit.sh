@@ -91,6 +91,16 @@ fi
 # STATUS: WORKING (WORKING/TESTING)
 # OPTIONAL: YES (YES/NO)
 
+echo "--------------- RACKIT WORKFLOW by Pablo Rodriguez -----------------" &>> ${LOG}
+echo "--- Start time: $(date)" &>> ${LOG}
+echo "--- Inputs:" &>> ${LOG}
+echo "------ Reads Fasta: ${READS}" &>> ${LOG}
+echo "------ Contigs Fasta: ${CONTIGS}" &>> ${LOG}
+echo "------ LCA Coverage Threshold: ${LCA_COVERAGE}" &>> ${LOG}
+echo "------ Reference DB fasta: ${DB}" &>> ${LOG}
+echo "------ Output Directory: ${OUTPUT}" &>> ${LOG}
+
+
 if [[ $DB == *.fa* ]]; then
         echo "###  (1/20) Now executing: makeblastdb | Reference DB" &>> ${LOG}
         ${BIN}format ${DB} ${DB_FORMAT} &>> ${LOG}
@@ -209,9 +219,9 @@ echo "##! (15/20)  RACKIT Python ToolKit finished successfully" &>> ${LOG}
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: YES (YES/NO)
 UNI_DB="${INTERMEDIATE_FILES}UNI_REFDB.fa"
-TAXO_FILE="${DB_FORMAT}.taxo"
+TAXO_FILE="${DB}.taxo"
 echo "### (16/20) Now executing: Taxomaker" &>> ${LOG}
-${TAXOMAKER} ${DB_FORMAT} 0 &>> ${LOG}
+${TAXOMAKER} ${DB} 0 &>> ${LOG}
 echo "##! (16/20)  Taxomaker finished successfully" &>> ${LOG}
 
 # MERGEMULTIFAST (17)
@@ -220,7 +230,7 @@ ${MERGEFULLFASTA} ${DB} ${UNI_DB} &>> ${LOG}
 echo "##! (17/20)  MergeMultiFasta finished successfully" &>> ${LOG}
 
 # UNISEQDBCOVERAGE (18)
-COVERAGE_OUTPUT="${RESULTS}coverage.info"
+COVERAGE_OUTPUT="${RESULTS}coverage"
 
 N_READS=$(grep -c '>' ${READS})
 N_CONTIGS=$(grep -c '>' ${CONTIGS})
@@ -232,3 +242,7 @@ echo "##! (18/20)  UniseqDBCoverage finished successfully" &>> ${LOG}
 ### R Results (20)
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
+
+
+
+echo "---- Finish time: $(date)" &>>$LOG
