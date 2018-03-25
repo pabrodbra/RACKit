@@ -16,7 +16,7 @@ class TaxaLoad(object):
         self.taxa_rank = rank
         self.taxonomy_dictionary = {}
         self.create_tax_dictionary(rank)
-        self.inverted_dictionary={}
+        self.taxa_count_dictionary={}
 
     def create_tax_dictionary(self, rank="Specie"):
         self.taxonomy_dictionary = {}
@@ -39,12 +39,15 @@ class TaxaLoad(object):
                 f.write(str(key) + "," + str(current_tax) + "\n")
     
     def create_inverted_dictionary(self):
-        self.inverted_dictionary = {v: k for k, v in self.taxonomy_dictionary.items()}
+        for key in self.taxonomy_dictionary.keys():
+            current_taxa = self.taxonomy_dictionary.get(key)
+            self.taxa_count_dictionary[current_taxa] = self.taxa_count_dictionary.get(current_taxa, 0) + 1
 
     def save_inverted_dictionary_count(self, output="Category-Count.csv"):
         with open(output, 'w') as f:
-            for key in self.inverted_dictionary.keys():
-                print(key); print(self.inverted_dictionary[key]);f.write( str(key) + ',' + str(len(self.inverted_dictionary[key])) + '\n' )
+            for key in self.taxa_count_dictionary.keys():
+                current_count = self.taxa_count_dictionary[key]
+                f.write( str(key) + ',' + str(current_count) + '\n' )
 
     def get_taxonomy_dictionary(self):
         return self.taxonomy_dictionary
