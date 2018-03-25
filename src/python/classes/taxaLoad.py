@@ -44,7 +44,7 @@ class TaxaLoad(object):
     def save_inverted_dictionary_count(self, output="Category-Count.csv"):
         with open(output, 'w') as f:
             for key in self.inverted_dictionary.keys():
-                f.write( str(key) + ',' + str(len(self.inverted_dictionary[key])) )
+                print(key); print(self.inverted_dictionary[key]);f.write( str(key) + ',' + str(len(self.inverted_dictionary[key])) + '\n' )
 
     def get_taxonomy_dictionary(self):
         return self.taxonomy_dictionary
