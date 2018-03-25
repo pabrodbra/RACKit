@@ -109,8 +109,8 @@ class ConfusionMatrixCalculator(object):
         return total
 
     def summarize_confusion_matrices(self, total_reads, total_contigs):
-        reads_final_cm = make_confusion_matrix_dict() #; print(self.reads_all_confusion_matrix)
-        contigs_final_cm = make_confusion_matrix_dict() #; print(self.contigs_all_confusion_matrix)
+        reads_final_cm = make_confusion_matrix_dict()
+        contigs_final_cm = make_confusion_matrix_dict()
 
         for specie, confusion_matrix in self.reads_all_confusion_matrix.items():
             reads_final_cm["tp"] += confusion_matrix["tp"]/float(total_reads)
@@ -124,7 +124,7 @@ class ConfusionMatrixCalculator(object):
             contigs_final_cm["fp"] += confusion_matrix["fp"]/float(total_contigs)
             contigs_final_cm["fn"] += confusion_matrix["fn"]/float(total_contigs)
 
-        self.final_read_cm = reads_final_cm; print(reads_final_cm)
+        self.final_read_cm = reads_final_cm
         self.final_contig_cm = contigs_final_cm
 
     def calculate_statistical_measurements(self):

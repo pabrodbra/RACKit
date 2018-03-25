@@ -170,6 +170,8 @@ FIX_READS="${INTERMEDIATE_FILES}fixed_reads.pblast"
 FIX_CONTIGS="${INTERMEDIATE_FILES}fixed_contigs.pblast"
 FIX_READS_CONTIGS="${INTERMEDIATE_FILES}fixed_reads_contigs.pblast"
 FILTER_READS="${INTERMEDIATE_FILES}filtered_reads_contigs.pblast"
+FILTER_UNIQUE_READS="${INTERMEDIATE_FILES}unique_filtered_reads.pblast"
+FILTER_UNIQUE_CONTIGS="${INTERMEDIATE_FILES}unique_filtered_contigs.pblast"
 
 echo "### (9/20)  Now executing: Fix Parsed Blast | Reads vs Reference DB" &>> ${LOG}
 sed -z 's/\n>/;>/g' ${PARSED_READS_REFDB_BLAST_PATH} | sed -z 's/\n/ /g' | sed -z 's/;/\n/g' | sed -z 's/\t/;/g' > ${FIX_READS}
@@ -183,9 +185,9 @@ echo "### (11/20)  Now executing: Fix Parsed Blast |  Reads vs Contig DB" &>> ${
 sed -z 's/\n>/;>/g' ${PARSED_READS_CONTIGS_BLAST_PATH} | sed -z 's/\n/ /g' | sed -z 's/;/\n/g' | sed -z 's/\t/;/g' > ${FIX_READS_CONTIGS}
 echo "##! (11/20)  Fixed Reads vs Contig DB Parsed Blast " &>> ${LOG}
 
-echo "### (12/20)  Now executing: Filter Parsed Blast | Reads vs Contigs" &>> ${LOG}
+echo "### (12/20)  Now executing: Filter Parsed Blast | All Fixed Parsed Blast Results" &>> ${LOG}
 ${FILTERPARSEDBLAST} ${FIX_READS_CONTIGS} ${FILTER_READS} 0 &>> ${LOG}
-echo "##! (12/20)  Filtered Reads vs Contig DB Parsed Blast" &>> ${LOG}
+echo "##! (12/20)  Filtered all Fixed Parsed Blast Results" &>> ${LOG}
 
 ### MEGAN (13-14)
 # STATUS: TESTING (WORKING/TESTING)
@@ -235,13 +237,25 @@ N_READS=$(grep -c '>' ${READS})
 N_CONTIGS=$(grep -c '>' ${CONTIGS})
 
 echo "### (18/20) Now executing: UniseqDBCoverage" &>> ${LOG}
-${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERAGE_OUTPUT} ${N_READS} ${N_CONTIGS} &>> ${LOG}
+${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERA${}GE_OUTPUT} ${N_READS} ${N_CONTIGS} &>> ${LOG}
 echo "##! (18/20)  UniseqDBCoverage finished successfully" &>> ${LOG}
+
+### Create original distro
+ORIGINAL_DISTRO="${RESULTS}refdb_distro.csv"
+
+echo "### (19/20) Now executing: Reference DB Species Distribution" &>> ${LOG}
+echo "Specie,Percentage" > $ORIGINAL_DISTRO
+awk 'NR>1' intermediateFiles/data_generation/grinder-ranks.txt | while read line; do
+    stringarray=($line)
+    temp_accesion=${stringarray[1]}
+    temp_percentage=${stringarray[2]}
+    SPECIE_NAME=$(grep $temp_accesion ${DB} | cut -d ' ' -f2,3)
+    echo "${SPECIE_NAME},${temp_percentage}" >> $ORIGINAL_DISTRO
+done
+echo "##! (19/20)  Reference DB Species Distribution finished successfully" &>> ${LOG}
 
 ### R Results (20)
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
-
-
 
 echo "---- Finish time: $(date)" &>>$LOG
