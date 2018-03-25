@@ -30,6 +30,12 @@ def taxonomy_load_main(read_taxa_path, contigs_taxa_path, tax_level="Specie"):
         read_taxa_load.save_taxonomy_dictionary(OUTPUT_DIRECTORY + tax_level + "read_category.csv")
         contig_taxa_load.save_taxonomy_dictionary(OUTPUT_DIRECTORY + tax_level + "contig_category.csv")
     
+    read_taxa_load.create_inverted_dictionary()
+    contig_taxa_load.create_inverted_dictionary()
+
+    read_taxa_load.save_inverted_dictionary_count(output = OUTPUT_DIRECTORY + "species-read_count.csv")
+    contig_taxa_load.save_inverted_dictionary_count(output = OUTPUT_DIRECTORY + "species-contig_count.csv")
+
     return read_taxa_load, contig_taxa_load
 
 

@@ -5,8 +5,8 @@ Workflow designed to compare the metagenomic taxanomic analysis between reads an
 Setup requirements.txt and Makefile(check)
 
 Required:
-* python3
-* gcc
+* Python 3.5.2 (python3)
+* GNU Compiler Collection (gcc) 
 
 Download Grinder (Version 0.5.4)
 * Download compressed file from 'https://sourceforge.net/projects/biogrinder/'
@@ -41,10 +41,7 @@ Setup Enviroment
 * 'export MEGAHIT=/home/pablorod/software/megahit/megahit'
 * 'export MEGAN=/home/pablorod/software/meganv6/tools/blast2lca'
 
-Start testing workflow with example (Export - How to do program paths properly)
-Remake REVCO Statistics
-Test REVCO py
-Test UniseqDBCoverage
+Start testing workflow with example
 Test R
 
 ------
