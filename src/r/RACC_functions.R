@@ -20,14 +20,22 @@ is.nan.data.frame <- function(x){
   do.call(cbind, lapply(x, is.nan))
 }
 
+join_list_comparisons <- function(vector.list.comparisons){
+  ret <- setNames(data.frame(matrix(ncol = length(names(vector.list.comparisons)), nrow = 0)), 
+                  names(vector.list.comparisons))
+  for (list.comp in vector.list.comparisons){
+    ret <- rbind(ret, list.comp, stringsAsFactors = FALSE)
+  }
+  return(ret)
+}
+
 ### Prepare descendant original, reads and contigs distro data + absolute difference relative to original
 # I: original.distro.file, read.distro.file, contig.distro.file
 # O: Normalized data
 preprocess_distribution_data <- function(original.distro.path, reads.distro.path, contigs.distro.path){
-  # original.distro.path <- .pa BEAR file | reads/contigs.distro.path <- MEGANv6 distribution
-  original.distro.per.specie <- read.csv(original.distro.path, header=FALSE, sep = '\t')
-  reads.distro.per.specie <- read.csv(reads.distro.path, header=FALSE, sep = ',')
-  contigs.distro.per.specie <- read.csv(contigs.distro.path, header=FALSE, sep = ',')
+  original.distro.per.specie <- read.csv2(original.distro.path, header=TRUE, sep = ',')
+  reads.distro.per.specie <- read.csv2(reads.distro.path, header=FALSE, sep = ',')
+  contigs.distro.per.specie <- read.csv2(contigs.distro.path, header=FALSE, sep = ',')
   
   # Make all species be in all sets
   which.reads <- which(!(reads.distro.per.specie$V1 %in% contigs.distro.per.specie$V1)==TRUE)
@@ -37,24 +45,21 @@ preprocess_distribution_data <- function(original.distro.path, reads.distro.path
   which.reads.null <- cbind(as.vector(which.contigs.info$V1), rep(0, length(which.contigs.info$V1)))
   which.contigs.null <- cbind(as.vector(which.reads.info$V1), rep(0, length(which.reads.info$V1)))
   
-  reads.distro.per.specie <- rbind(reads.distro.per.specie[-which.reads,],which.reads.info,which.reads.null)
-  contigs.distro.per.specie <- rbind(contigs.distro.per.specie[-which.contigs,], which.contigs.null, which.contigs.info)
+  if( !identical(which.reads, integer(0)) )
+    reads.distro.per.specie <- rbind(reads.distro.per.specie[-which.reads,],which.reads.info,which.reads.null)
+  if( !identical(which.contigs, integer(0)) )
+    contigs.distro.per.specie <- rbind(contigs.distro.per.specie[-which.contigs,], which.contigs.null, which.contigs.info)
   
-  # CHECK ITS THE SAME
-  if(which(reads.distro.per.specie$V1 != contigs.distro.per.specie$V1) != 0){
-    stop("Error - Species missing in reads or contigs");
-  }
-  
-  # Original distro descendat
+  # Original distro descendant
   orig.desc <- c()
   for(specie in reads.distro.per.specie[,1]){
     orig.desc <- c(orig.desc, sum(original.distro.per.specie[grep(specie, original.distro.per.specie[,1]),2])) 
   }
   
   # Prepare Values
-  orig.desc <- as.numeric(orig.desc)*100
-  reads.desc <- as.numeric(reads.distro.per.specie[,2])
-  contigs.desc <- as.numeric(contigs.distro.per.specie[,2])
+  orig.desc <- as.numeric(orig.desc)
+  reads.desc <- as.numeric(reads.distro.per.specie[,2])*100/sum(reads.distro.per.specie[,2])
+  contigs.desc <- as.numeric(contigs.distro.per.specie[,2])*100/sum(contigs.distro.per.specie[,2])
   names(orig.desc) <- names(reads.desc) <- names(contigs.desc) <- reads.distro.per.specie[,1]
   
   # Distribution info
@@ -77,15 +82,15 @@ preprocess_distribution_data <- function(original.distro.path, reads.distro.path
 original_distribution_plot <- function(orig.desc, output.path){
   # Distribution lines
   sort.data <- data.frame(orig=orig.desc)
-  sort.data <- sort.data[order(sort.data$orig, decreasing = TRUE),]
+  sort.data <- orig.desc[order(sort.data$orig, decreasing = TRUE)]
   
   # Plot
   png(filename = output.path, width = plot.width, height = plot.height)
-  t <- sapply(1:length(rownames(sort.data)), function(x) "")
+  t <- sapply(1:length(names(orig.desc)), function(x) "")
   par(mar=c(6,6,5,1.5))
-  plot(sort.data$orig,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2,
+  plot(sort.data,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
        xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=2, cex.lab = 2.5, cex.axis=2)
-  axis(1, at=c(1:nrow(sort.data)), labels = t)
+  axis(1, at=c(1:length(orig.desc)), labels = t)
   grid()
   legend("topright",legend=c("Original"),col=c("green"),bg="white",lwd=2, cex = 1.6)
   dev.off()
@@ -103,7 +108,7 @@ distribution_comparison_plot <- function(orig.desc, reads.desc, contigs.desc, ou
   png(filename = output.path, width = plot.width, height = plot.height)
   t <- sapply(1:length(rownames(sort.data)), function(x) "")
   par(mar=c(6,6,5,1.5))
-  plot(sort.data$orig,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2,
+  plot(sort.data$orig,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
        xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=2, cex.lab = 2.5, cex.axis=2)
   axis(1, at=c(1:nrow(sort.data)), labels = t)
   lines(sort.data$reads,type="l",col="red",lty=1,lwd=2)
@@ -123,7 +128,7 @@ rmse_comparison <- function(orig.desc, reads.desc, contigs.desc){
   contigs.distro.rmse <- sum( (contigs.desc-orig.desc)^2/length(orig.desc) )^(1/2)
   
   ret <- list(
-    "reads.rmse" <- reads.distro.rmse,
+    "reads.rmse" = reads.distro.rmse,
     "contigs.rmse" = contigs.distro.rmse
   )
   return(ret)
@@ -237,24 +242,16 @@ coverage_comparison <- function(coverage.info.path){
   return (ret)
 }
 
-### Statistical Measurements (TP/FP/TN/FN)
-# I:
-# O: Table CSV
-
 #--------------TODO
 
-### Inconsistencies Found
-# I: 
+### Statistical Measurements (TP/FP/TN/FN)
+# I: rac-statistical_measurements.csv
 # O: Table CSV
 
 
-### Join Comparison results
+### Inconsistencies Found
+# I: inc-solver.out
+# O: Table CSV
 
-join_list_comparisons <- function(vector.list.comparisons){
-  ret <- setNames(data.frame(matrix(ncol = length(names(vector.list.comparisons)), nrow = 0)), 
-                  names(vector.list.comparisons))
-  for (list.comp in vector.list.comparisons){
-    ret <- rbind(ret, list.comp, stringsAsFactors = FALSE)
-  }
-  return(ret)
-}
+
+### Multi RACKIT Results analysis
