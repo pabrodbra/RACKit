@@ -1,6 +1,10 @@
 # Made by Pablo Rodríguez Brazzarola
 # RACC Results Processing Functions
 # Libraries
+list.of.packages <- c("ggplot2", "reshape2")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages, repos = "http://cran.us.r-project.org")
+
 library(ggplot2)
 library(reshape2)
 

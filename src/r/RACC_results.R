@@ -13,7 +13,10 @@ read.distro.file = "species-read_count.csv" # TODO
 contig.distro.file = "species-contig_count.csv" # TODO
 inconsistency.solver.output <- "inc_solver.out"
 coverage.info.path <- "coverage.info"
+inconsistencies.found.output <- "inc-finder.out"
+statistical.measurements.output <- "rac-statistical_measurements.csv"
 
+### --- Execution ---
 processed_distro_data <- preprocess_distribution_data(original.distro.file, read.distro.file, contig.distro.file)
 
 ### Original Distro

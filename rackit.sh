@@ -8,9 +8,11 @@ OUTPUT=$4
 # Output folders
 INTERMEDIATE_FILES="${OUTPUT}intermediateFiles/"
 RESULTS="${OUTPUT}results/"
+REPORT="${OUTPUT}report/"
 INPUT="${OUTPUT}inputs/"
 mkdir -p $INTERMEDIATE_FILES
 mkdir -p $RESULTS
+mkdir -p $REPORT
 
 #############
 ### Programs
@@ -34,8 +36,8 @@ TAXOMAKER="${BIN}taxomaker"
 MERGEFULLFASTA="${BIN}mergeMultiFasta"
 # UNISEQDBCOVERAGE Path
 UNISEQDBCOVERAGE="${BIN}uniseqDBCoverage"
-# R Path
-RPATH=Rscript
+# RACKIT R Path
+RACKIT_R_DIR="Rscript ${SH_DIR}/src/r/"
 # RACKIT.py
 RACKIT_PY="python3 ${SH_DIR}/src/python/rackit.py"
 
@@ -237,7 +239,7 @@ N_READS=$(grep -c '>' ${READS})
 N_CONTIGS=$(grep -c '>' ${CONTIGS})
 
 echo "### (18/20) Now executing: UniseqDBCoverage" &>> ${LOG}
-${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERA${}GE_OUTPUT} ${N_READS} ${N_CONTIGS} &>> ${LOG}
+${UNISEQDBCOVERAGE} ${FIX_READS} ${FIX_CONTIGS} ${TAXO_FILE} ${UNI_DB} ${COVERAGE_OUTPUT} ${N_READS} ${N_CONTIGS} &>> ${LOG}
 echo "##! (18/20)  UniseqDBCoverage finished successfully" &>> ${LOG}
 
 ### Create original distro
@@ -257,5 +259,8 @@ echo "##! (19/20)  Reference DB Species Distribution finished successfully" &>> 
 ### R Results (20)
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
+echo "### (20/20) Now executing: RACC Results R Script" &>> ${LOG}
+"${RACKIT_R_DIR}RACC_script.R" $RESULTS $REPORT "${RACKIT_R_DIR}RACC_functions.R"
+echo "##! (20/20) RACC Results R Script finished" &>> ${LOG}
 
 echo "---- Finish time: $(date)" &>>$LOG
