@@ -7,6 +7,8 @@ Setup requirements.txt and Makefile(check)
 Required:
 * Python 3.5.2 (python3)
 * GNU Compiler Collection (gcc) 
+* R 3.3.4
+* pdflatex (For PDF report) 'sudo apt install texlive-latex-base texlive-fonts-recommended'
 
 Download Grinder (Version 0.5.4)
 * Download compressed file from 'https://sourceforge.net/projects/biogrinder/'

@@ -260,7 +260,7 @@ echo "##! (19/20)  Reference DB Species Distribution finished successfully" &>> 
 # STATUS: TESTING (WORKING/TESTING)
 # OPTIONAL: NO (YES/NO)
 echo "### (20/20) Now executing: RACC Results R Script" &>> ${LOG}
-"${RACKIT_R_DIR}RACC_script.R" $RESULTS $REPORT "${RACKIT_R_DIR}RACC_functions.R"
+"${RACKIT_R_DIR}RACC_script.R" $RESULTS $REPORT $RACKIT_R_DIR
 echo "##! (20/20) RACC Results R Script finished" &>> ${LOG}
 
 echo "---- Finish time: $(date)" &>>$LOG

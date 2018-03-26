@@ -2,11 +2,13 @@
 # RACC Results Processing
 rm(list = ls())
 setwd("~/Code/work/software/RACKit/src/r")
+setwd("~/software/RACC/src/r")
 source("RACC_functions.R")
 ### Parameter introduction
 # TODO
 
 setwd("C:/Users/Blinsky.Blinsk/Documents/- UMA/TFG/RACKIT/results/rac_test/results")
+setwd("~/results/rac_test/results")
 
 original.distro.file = "refdb_distro.csv" #<- read.csv2("grinder-ranks.txt", sep = '\t', header = TRUE)
 read.distro.file = "species-read_count.csv" # TODO

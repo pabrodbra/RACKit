@@ -1,12 +1,10 @@
 # RACC R script
 # Made by: Pablo Rodriguez Brazzarola
 
-
-
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args)!=3) {
-  stop("***USAGE*** Rscript RACC_script.R <RACC_results_directory> <RACC_report_directory> <Absolute_RACKit_src_r_functions>\n", call.=FALSE)
+  stop("***USAGE*** Rscript RACC_script.R <RACC_results_directory> <RACC_report_directory> <Absolute_RACKit_src_r>\n", call.=FALSE)
 }
 
 relative.path <- getwd()
@@ -21,9 +19,12 @@ inconsistencies.found.output <- paste(results.directory, "inc-finder.out", sep =
 statistical.measurements.output <- paste(results.directory, "rac-statistical_measurements.csv", sep = "")
 
 output.directory <- paste(relative.path, args[2], sep = "")
+output.pdf <- paste(output.directory, "PDF-report.pdf", sep = "")
 
-source(args[3])
+RACC.functions.path <- paste(args[3], "RACC_functions.R", sep = "")
+source(RACC.functions.path)
 
+params.pdf <- list(results = results.directory)
 ### --- Execution ---
 processed_distro_data <- preprocess_distribution_data(original.distro.file, read.distro.file, contig.distro.file)
 
@@ -61,3 +62,11 @@ solved.inconsistencies.results <- inconsistency_resolution(inconsistency.solver.
 # O: Table CSV
 coverage.comparison.results <- coverage_comparison(coverage.info.path)
 coverage.comparison.results
+
+### R Markdown Report
+
+Sys.setenv(RSTUDIO_PANDOC="/usr/lib/rstudio/bin/pandoc")
+RACC.markdown.path <- paste(args[3], "RACC_report.Rmd", sep = "")
+rmarkdown::render(RACC.markdown.path, params = params.pdf, output_file = output.pdf)
+#params <- params.pdf
+#knitr::knit(RACC.markdown.path, output= "output.pdf")

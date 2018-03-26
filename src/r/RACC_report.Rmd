@@ -1,0 +1,97 @@
+---
+title: "RACKit Report"
+author: "Pablo Rodriguez Brazzarola"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center", out.width = '80%',
+                      fig.asp = 1, out.extra = '', out.height = '80%')
+
+### --- FIGURE PARAMS ---
+CEX.MAIN <- 1
+CEX.LAB <- 1.25
+CEX.AXIS <- 1
+CEX.LEGEND <- 0.8
+GG.AXIS.TITLE <- 11
+GG.AXIS.TEXT <- 9
+GG.PLOT.MAIN <- 13
+GG.PLOT.SUB <- 9
+GG.LEGEND.TEXT <- 8
+GG.LEGEND.TITLE <- 9
+
+### --- Execution ---
+processed_distro_data <- preprocess_distribution_data(original.distro.file, read.distro.file, contig.distro.file)
+
+```
+
+## Original Distribution of Species
+
+The distribution of species of the reads created by Grinder is depicted in Figure 1.
+
+```{r warning=FALSE, echo=FALSE, fig.cap="Distribution of species in original dataset"}
+original_distribution_plot(processed_distro_data$orig.descendant.distribution,
+                           PNG=FALSE)
+```
+
+## Species Distribution Comparison
+
+After performing the taxonomic analysis, we can observe the comparison between the results obtained between the reads and contigs species distribution (Figure 2).
+
+```{r warning=FALSE, echo=FALSE, fig.cap="Distribution of species comparison between reads, contigs and the original dataset"}
+distribution_comparison_plot(processed_distro_data$orig.descendant.distribution,
+                             processed_distro_data$reads.descendant.distribution,
+                             processed_distro_data$contigs.descendant.distribution,
+                             PNG=FALSE)
+```
+
+
+## Root Mean Squared Error after performing the Taxonomic Analysis
+
+Although the previous plot gives us a visual aid, now we calculate the RMSE to quantify the difference between the taxonomic analysis performed by reads or contigs in comparison to the original distribution.
+
+```{r warning=FALSE, echo=FALSE}
+rmse.results <- rmse_comparison(processed_distro_data$orig.descendant.distribution,
+                                processed_distro_data$reads.descendant.distribution,
+                                processed_distro_data$contigs.descendant.distribution)
+df <- list.to.dataframe(rmse.results, "RMSE", c("Reads", "Contigs"))
+kable(df)
+```
+
+## Found inconsistencies between Reads and Contigs
+
+The following inconsistencies have been detected:
+
+```{r warning=FALSE, echo=FALSE}
+
+```
+
+## Inconsistency Resolution
+
+The previously detected inconsistencies are solved at the following taxonomic ranks (Figure 3).
+
+```{r warning=FALSE, echo=FALSE, fig.cap="Taxonomic rank in which inconsistencies are solved"}
+solved.inconsistencies.results <- inconsistency_resolution(inconsistency.solver.output,
+                                                           PNG=FALSE)
+```
+
+## Coverage of Reference Database Comparison
+
+In the following table we can detail and compare the coverage measurements of the reference database between reads and contigs.
+
+```{r warning=FALSE, echo=FALSE}
+coverage.comparison.results <- coverage_comparison(coverage.info.path)
+df <- list.to.dataframe(coverage.comparison.results, "Metrics",
+                        c("Reads Only", "Contigs Only", "Read Total", "Contig Total", "Shared", "Not covered"))
+df <- data.frame(t(df))
+kable(df)
+```
+
+## Statistical Measurements Comparison
+
+The statistical measurements obtained after calculating the confusion matrix of the taxonomic analysis performed for both reads and contigs are the following.
+
+```{r warning=FALSE, echo=FALSE}
+
+```
+
