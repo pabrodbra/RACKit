@@ -43,9 +43,9 @@ class ConfusionMatrixCalculator(object):
         with open(self.fixed_reads, 'r') as f:
             # >5-NC_014963.1 >NC_014963.1.1  5095226 1;0;90;90;100;0;0;+-;1;90;3586622;3586533
             for line in f:
-                items = line.split(' ')
-                r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
-                r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
+                items = line.split(' '); #print(items)
+                r_id = items[0].rsplit('.')[0][1:] #r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
+                r_match = items[1][1:]; #print(r_id + " - " + r_match); input() #r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
                 
                 for specie, s_cm in self.reads_all_confusion_matrix.items():
                     if (r_match == specie):
@@ -70,7 +70,7 @@ class ConfusionMatrixCalculator(object):
                 temp_dict = {}
                 asm_reads = self.grefco.contig_dictionary.get(c_id, None)
                 for t_read in asm_reads:
-                        r_id = t_read[0].rsplit('-',1)[1]
+                        r_id = t_read[0].rsplit('.')[0][1:] #r_id = t_read[0].rsplit('-',1)[1]
                         temp_dict[r_id] = temp_dict.get(r_id, 0) + 1
                 max_v = max(temp_dict.values())
                 tops = [k for k,v in temp_dict.items() if v == max_v]
@@ -85,10 +85,10 @@ class ConfusionMatrixCalculator(object):
         with open(self.fixed_contigs, 'r') as f:
             # >k67_1 flag=1 multi=2.0000 len=207 >NC_014963.1.1  5095226 1;0;207;207;100;0;0;+-;1;207;4289335;4289129
             for line in f:
-                items = line.split(' ')
+                items = line.split(' '); #print(items)
                 contig_id = items[0][1:] # >k67_1 -> k67_1
-                contig_match = items[4][1:].rsplit('.',1)[0] # >NC_014963.1.1 -> NC_014963.1
-                # print(contig_id); print(contig_match)
+                contig_match = items[4][1:] #.rsplit('.',1)[0] # >NC_014963.1.1 -> NC_014963.1
+                #print(contig_id + " - " + contig_match)
                 representatives = contig_most_representative.get(contig_id, None) #; print(representatives); input()
                 if representatives is not None:
                     for top_read in representatives:
