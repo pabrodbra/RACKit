@@ -7,8 +7,8 @@ def make_confusion_matrix_dict():
 
 def make_statistical_measurements_dict(cm):
     tp = cm["tp"]; fp = cm["fp"]; tn = cm["tn"]; fn = cm["fn"]
-    sens = tn/float(tn+fp)
-    spec = tp/float(tp+fn)
+    sens = tp/float(tp+fn)
+    spec = tn/float(tn+fp)
     fallout = fp/float(fp+tn)
     precision = tp/float(tp+fp)
     acc = (tp + tn)/float(tp + fp + fn + tn)
@@ -44,10 +44,11 @@ class ConfusionMatrixCalculator(object):
             # >5-NC_014963.1 >NC_014963.1.1  5095226 1;0;90;90;100;0;0;+-;1;90;3586622;3586533
             for line in f:
                 items = line.split(' '); #print(items)
-                r_id = items[0].rsplit('.')[0][1:] #r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
+                r_id = items[0].rsplit('.', 1)[0][1:] #r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
                 r_match = items[1][1:]; #print(r_id + " - " + r_match); input() #r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
                 
                 for specie, s_cm in self.reads_all_confusion_matrix.items():
+                    #print("Specie: " + specie + " - ReadID" + r_id + " - MatchID: " + r_match)
                     if (r_match == specie):
                         if(r_match == r_id):
                            s_cm["tp"] += 1
@@ -59,6 +60,7 @@ class ConfusionMatrixCalculator(object):
                             s_cm["tn"] += 1
                         else:
                             s_cm["fn"] += 1
+
                     total += 1
 
         return total
@@ -70,7 +72,7 @@ class ConfusionMatrixCalculator(object):
                 temp_dict = {}
                 asm_reads = self.grefco.contig_dictionary.get(c_id, None)
                 for t_read in asm_reads:
-                        r_id = t_read[0].rsplit('.')[0][1:] #r_id = t_read[0].rsplit('-',1)[1]
+                        r_id = t_read[0].rsplit('.', 1)[0] #[1:] #r_id = t_read[0].rsplit('-',1)[1]
                         temp_dict[r_id] = temp_dict.get(r_id, 0) + 1
                 max_v = max(temp_dict.values())
                 tops = [k for k,v in temp_dict.items() if v == max_v]
@@ -110,7 +112,10 @@ class ConfusionMatrixCalculator(object):
 
     def summarize_confusion_matrices(self, total_reads, total_contigs):
         reads_final_cm = make_confusion_matrix_dict()
-        contigs_final_cm = make_confusion_matrix_dict()
+        contigs_final_cm = make_confusion_matrix_dict(); max_reads = len(self.grefco.reads_dictionary.keys()); max_contigs = len(self.grefco.contig_dictionary.keys())
+        print("TOTAL READS : " + str(total_reads) + " | MAX_READS : " + str(max_reads))
+        print("TOTAL CONTIGS : " + str(total_contigs) + " | MAX_CONTIGS : " + str(max_contigs))
+        print("TOTAL SPECIES : " + str( len( self.reads_all_confusion_matrix.keys() ) ) )
 
         for specie, confusion_matrix in self.reads_all_confusion_matrix.items():
             reads_final_cm["tp"] += confusion_matrix["tp"]/float(total_reads)
