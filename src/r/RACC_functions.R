@@ -58,9 +58,13 @@ join_list_comparisons <- function(vector.list.comparisons){
 preprocess_distribution_data <- function(original.distro.path,
                                          reads.distro.path,
                                          contigs.distro.path){
-  original.distro.per.specie <- read.csv2(original.distro.path, header=TRUE, sep = ',')
+  original.distro.per.specie <- read.csv2(original.distro.path, header=TRUE, sep = '\t')
   reads.distro.per.specie <- read.csv2(reads.distro.path, header=FALSE, sep = ',')
   contigs.distro.per.specie <- read.csv2(contigs.distro.path, header=FALSE, sep = ',')
+  
+  original.distro.per.specie[,2] <- as.numeric(original.distro.per.specie[,2])
+  # reads.distro.per.specie[,2] <- as.numeric(reads.distro.per.specie[,2])
+  # contigs.distro.per.specie[,2] <- as.numeric(contigs.distro.per.specie[,2])
   
   # Make all species be in all sets
   which.reads <- which(!(reads.distro.per.specie$V1 %in% contigs.distro.per.specie$V1)==TRUE)
@@ -82,9 +86,9 @@ preprocess_distribution_data <- function(original.distro.path,
   }
   
   # Prepare Values
-  orig.desc <- as.numeric(orig.desc)
-  reads.desc <- as.numeric(reads.distro.per.specie[,2])*100/sum(reads.distro.per.specie[,2])
-  contigs.desc <- as.numeric(contigs.distro.per.specie[,2])*100/sum(contigs.distro.per.specie[,2])
+  orig.desc <- as.numeric(orig.desc)/sum(orig.desc)
+  reads.desc <- as.numeric( as.numeric(reads.distro.per.specie[,2]) )*100/sum( as.numeric(reads.distro.per.specie[,2]) )
+  contigs.desc <- as.numeric( as.numeric(contigs.distro.per.specie[,2]) )*100/sum( as.numeric(contigs.distro.per.specie[,2]) )
   names(orig.desc) <- names(reads.desc) <- names(contigs.desc) <- reads.distro.per.specie[,1]
   
   # Distribution info
@@ -106,22 +110,47 @@ preprocess_distribution_data <- function(original.distro.path,
 # O: Plot
 original_distribution_plot <- function(orig.desc,
                                        output.path="IMG-original_ditribution_plot.png",
-                                       PNG=TRUE){
+                                       PNG=TRUE, title="", max.species=50){
   # Distribution lines
   sort.data <- data.frame(orig=orig.desc)
   sort.data <- orig.desc[order(sort.data$orig, decreasing = TRUE)]
+  sort.data <- sort.data[sort.data!=0]
+  if(length(orig.desc) > max.species)
+    sort.data <- sort.data[seq_len(max.species)]
   
   # Plot
   if(PNG)
     png(filename = output.path, width = plot.width, height = plot.height)
   t <- sapply(1:length(names(orig.desc)), function(x) "")
   par(mar=c(6,6,5,1.5))
-  plot(sort.data,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
-       xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=CEX.MAIN,
-       cex.lab = CEX.LAB, cex.axis=CEX.AXIS)
-  axis(1, at=c(1:length(orig.desc)), labels = t)
-  grid()
-  legend("topright",legend=c("Original"),col=c("green"),bg="white",lwd=2, cex = CEX.LEGEND)
+  # plot(sort.data,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
+  #      xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=CEX.MAIN,
+  #      cex.lab = CEX.LAB, cex.axis=CEX.AXIS)
+  # axis(1, at=c(1:length(orig.desc)), labels = t)
+  # grid()
+  # legend("topright",legend=c("Original"),col=c("green"),bg="white",lwd=2, cex = CEX.LEGEND)
+  bks <- seq(min(sort.data), max(sort.data))
+  tmp.df <- data.frame(value = sort.data, specie = names(sort.data), group = rep("orig", length(sort.data)))
+  dat <- melt(tmp.df, value.name = "value", varnames = c("specie", "group"))
+  dat$group <- factor(dat$group, levels = "orig")
+  dat$specie = factor(dat$specie, levels = dat$specie[order(-dat$value[dat$group=="orig"])])
+  
+  p <- ggplot(dat, aes(x = specie, y = value, group = group)) + 
+    geom_line(aes(color=group), size=1.5) + #expand_limits(y=0) + 
+    scale_y_continuous(labels = function (x) paste0(x,"%"), breaks = c(0.1,0.5,1,5,10,25,50,100)) + 
+    coord_trans(y="log10", limy = c(0.1,100)) + 
+    scale_colour_brewer(palette = "Set1", name="", labels = "Original")+
+    xlab("Species")+
+    ylab("Percentage of sequences")+
+    ggtitle("Relative abundance per Specie", subtitle = title)+
+    theme(axis.title = element_text(size=GG.AXIS.TITLE),
+          axis.text = element_text(size=GG.AXIS.TEXT),
+          axis.text.x = element_blank(),
+          plot.title =element_text(size=GG.PLOT.MAIN,face="bold"),
+          plot.subtitle = element_text(size=GG.PLOT.SUB),
+          legend.text=element_text(size=GG.LEGEND.TEXT),
+          legend.title =element_text(size=GG.LEGEND.TITLE))
+  plot(p)
   if(PNG)
     dev.off()
 }
@@ -133,27 +162,54 @@ distribution_comparison_plot <- function(orig.desc,
                                          reads.desc,
                                          contigs.desc,
                                          output.path="IMG-compared_ditribution_plot.png",
-                                         PNG=TRUE){
+                                         PNG=TRUE, title = "", max.species=50){
   # Distribution lines
-  sort.data <- data.frame(orig=orig.desc,reads=reads.desc,contig=contigs.desc)
+  sort.data <- data.frame(orig=orig.desc*100,reads=reads.desc,contig=contigs.desc)
   sort.data <- sort.data[order(sort.data$orig, decreasing = TRUE),]
+  row.sub <- apply(sort.data, 1, function(x) all(x!=0))
+  sort.data[row.sub,]
   
+  if(length(orig.desc) > max.species)
+    sort.data <- sort.data[seq_len(max.species),]
   # Plot
   if(PNG)
     png(filename = output.path, width = plot.width, height = plot.height)
   t <- sapply(1:length(rownames(sort.data)), function(x) "")
   par(mar=c(6,6,5,1.5))
-  plot(sort.data$orig,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
-       xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=CEX.MAIN, 
-       cex.lab = CEX.LAB, cex.axis=CEX.AXIS)
-  axis(1, at=c(1:nrow(sort.data)), labels = t)
-  lines(sort.data$reads,type="l",col="red",lty=1,lwd=2)
-  lines(sort.data$contig,type="l",col="blue",lty=1,lwd=2)
-  lines(sort.data$orig, type="l", col="green", lty=1, lwd=2)
-  axis(1, at=c(1:nrow(sort.data)), labels = t)
-  grid()
-  legend("topright",legend=c("Original","Reads","Contigs"),col=c("green","red","blue"),
-         bg="white",lwd=2, cex = CEX.LEGEND)
+  # plot(sort.data$orig,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
+  #      xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=CEX.MAIN, 
+  #      cex.lab = CEX.LAB, cex.axis=CEX.AXIS)
+  # axis(1, at=c(1:nrow(sort.data)), labels = t)
+  # lines(sort.data$reads,type="l",col="red",lty=1,lwd=2)
+  # lines(sort.data$contig,type="l",col="blue",lty=1,lwd=2)
+  # lines(sort.data$orig, type="l", col="green", lty=1, lwd=2)
+  # axis(1, at=c(1:nrow(sort.data)), labels = t)
+  # grid()
+  # legend("topright",legend=c("Original","Reads","Contigs"),col=c("green","red","blue"),
+  #        bg="white",lwd=2, cex = CEX.LEGEND)
+  tmp.df <- data.frame(value = c(sort.data$orig, sort.data$reads, sort.data$contig),
+                       specie = rep(rownames(sort.data), 3),
+                       group = c( rep("orig", nrow(sort.data)), rep("reads", nrow(sort.data)), rep("contig", nrow(sort.data)) ))
+  dat <- melt(tmp.df, value.name = "value", varnames = c("specie", "group"))
+  dat$group = factor(dat$group, levels=c("orig","reads","contig"))
+  dat$specie = factor(dat$specie, levels = dat$specie[order(-dat$value[dat$group=="orig"])])
+  
+  p <- ggplot(dat, aes(x = specie, y = value, group = group)) + 
+    geom_line(aes(color=group), size=1.5) + #expand_limits(y=0) + scale_y_continuous(labels = function (x) paste0(x,"%"))+
+    scale_y_continuous(labels = function (x) paste0(x,"%"), breaks = c(0.1,0.5,1,5,10,25,50,100)) + 
+    coord_trans(y="log10", limy = c(0.1,100)) + 
+    scale_colour_brewer(palette = "Set1", name="", labels = c("Original", "Reads", "Contigs"))+#labs(color="")+
+    xlab("Species")+
+    ylab("Percentage of sequences")+
+    ggtitle("Relative abundance per Specie", subtitle = title)+
+    theme(axis.title = element_text(size=GG.AXIS.TITLE),
+          axis.text = element_text(size=GG.AXIS.TEXT),
+          axis.text.x = element_blank(),
+          plot.title =element_text(size=GG.PLOT.MAIN,face="bold"),
+          plot.subtitle = element_text(size=GG.PLOT.SUB),
+          legend.text=element_text(size=GG.LEGEND.TEXT),
+          legend.title =element_text(size=GG.LEGEND.TITLE))
+  plot(p)
   if(PNG)
     dev.off()
 }
