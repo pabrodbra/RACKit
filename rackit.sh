@@ -21,9 +21,9 @@ mkdir -p $REPORT
 SH_DIR=$(dirname "$0")
 BIN="${SH_DIR}/bin/"
 # MAKEBLASTDB Path
-MAKEBLASTDB=makeblastdb
+MAKEBLASTDB=/home/pablorod/software/ncbi-blast-2.7.1+/bin/makeblastdb
 # BLASTN Path
-BLASTN=blastn
+BLASTN=/home/pablorod/software/ncbi-blast-2.7.1+/bin/blastn
 # MEGAN Path
 MEGAN=$MEGAN
 # QNUCLPARSERBLAST Path
@@ -57,7 +57,7 @@ ACCESSION_TO_TAXA=/home/pablorod/data/ncbi_taxonomy/nucl_acc2tax-Mar2018.abin
 # Database fasta Path
 #DB="/home/pablorod/data/metagenome/RAC_test/refsoilDB.fa"
 DB=$5
-DB_FORMAT="${DB}.format"
+DB_FORMAT="${DB}" #.format"
 
 #############
 ### Outputs
