@@ -118,26 +118,22 @@ original_distribution_plot <- function(orig.desc,
   if(length(orig.desc) > max.species)
     sort.data <- sort.data[seq_len(max.species)]
   
-  # Plot
-  if(PNG)
-    png(filename = output.path, width = plot.width, height = plot.height)
-  t <- sapply(1:length(names(orig.desc)), function(x) "")
-  par(mar=c(6,6,5,1.5))
-  # plot(sort.data,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
-  #      xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=CEX.MAIN,
-  #      cex.lab = CEX.LAB, cex.axis=CEX.AXIS)
-  # axis(1, at=c(1:length(orig.desc)), labels = t)
-  # grid()
-  # legend("topright",legend=c("Original"),col=c("green"),bg="white",lwd=2, cex = CEX.LEGEND)
-  bks <- seq(min(sort.data), max(sort.data))
+  
   tmp.df <- data.frame(value = sort.data, specie = names(sort.data), group = rep("orig", length(sort.data)))
   dat <- melt(tmp.df, value.name = "value", varnames = c("specie", "group"))
   dat$group <- factor(dat$group, levels = "orig")
   dat$specie = factor(dat$specie, levels = dat$specie[order(-dat$value[dat$group=="orig"])])
   
+  # Plot
+  if(PNG)
+    png(filename = output.path, width = plot.width, height = plot.height)
+  t <- sapply(1:length(names(orig.desc)), function(x) "")
+  par(mar=c(6,6,5,1.5))
+  bks <-c(0.1,0.5,1,5,10,25,50,100)
+  
   p <- ggplot(dat, aes(x = specie, y = value, group = group)) + 
     geom_line(aes(color=group), size=1.5) + #expand_limits(y=0) + 
-    scale_y_continuous(labels = function (x) paste0(x,"%"), breaks = c(0.1,0.5,1,5,10,25,50,100)) + 
+    scale_y_continuous(labels = function (x) paste0(x,"%"), breaks = bks) + 
     coord_trans(y="log10", limy = c(0.1,100)) + 
     scale_colour_brewer(palette = "Set1", name="", labels = "Original")+
     xlab("Species")+
@@ -171,22 +167,7 @@ distribution_comparison_plot <- function(orig.desc,
   
   if(length(orig.desc) > max.species)
     sort.data <- sort.data[seq_len(max.species),]
-  # Plot
-  if(PNG)
-    png(filename = output.path, width = plot.width, height = plot.height)
-  t <- sapply(1:length(rownames(sort.data)), function(x) "")
-  par(mar=c(6,6,5,1.5))
-  # plot(sort.data$orig,type="l",col="green",lty=1,ylab="Percentage of Sequences",lwd=2, ylim = c(0.1,100),
-  #      xlab="Species",xaxt="n", main = "Percentage of Sequences per Specie (FSD)", log="y", cex.main=CEX.MAIN, 
-  #      cex.lab = CEX.LAB, cex.axis=CEX.AXIS)
-  # axis(1, at=c(1:nrow(sort.data)), labels = t)
-  # lines(sort.data$reads,type="l",col="red",lty=1,lwd=2)
-  # lines(sort.data$contig,type="l",col="blue",lty=1,lwd=2)
-  # lines(sort.data$orig, type="l", col="green", lty=1, lwd=2)
-  # axis(1, at=c(1:nrow(sort.data)), labels = t)
-  # grid()
-  # legend("topright",legend=c("Original","Reads","Contigs"),col=c("green","red","blue"),
-  #        bg="white",lwd=2, cex = CEX.LEGEND)
+  
   tmp.df <- data.frame(value = c(sort.data$orig, sort.data$reads, sort.data$contig),
                        specie = rep(rownames(sort.data), 3),
                        group = c( rep("orig", nrow(sort.data)), rep("reads", nrow(sort.data)), rep("contig", nrow(sort.data)) ))
@@ -194,9 +175,16 @@ distribution_comparison_plot <- function(orig.desc,
   dat$group = factor(dat$group, levels=c("orig","reads","contig"))
   dat$specie = factor(dat$specie, levels = dat$specie[order(-dat$value[dat$group=="orig"])])
   
+  # Plot
+  if(PNG)
+    png(filename = output.path, width = plot.width, height = plot.height)
+  t <- sapply(1:length(rownames(sort.data)), function(x) "")
+  par(mar=c(6,6,5,1.5))
+  bks <-c(0.1,0.5,1,5,10,25,50,100)
+  
   p <- ggplot(dat, aes(x = specie, y = value, group = group)) + 
-    geom_line(aes(color=group), size=1.5) + #expand_limits(y=0) + scale_y_continuous(labels = function (x) paste0(x,"%"))+
-    scale_y_continuous(labels = function (x) paste0(x,"%"), breaks = c(0.1,0.5,1,5,10,25,50,100)) + 
+    geom_line(aes(color=group), size=1.5) + 
+    scale_y_continuous(labels = function (x) paste0(x,"%"), breaks = bks) + 
     coord_trans(y="log10", limy = c(0.1,100)) + 
     scale_colour_brewer(palette = "Set1", name="", labels = c("Original", "Reads", "Contigs"))+#labs(color="")+
     xlab("Species")+
@@ -220,8 +208,8 @@ distribution_comparison_plot <- function(orig.desc,
 rmse_comparison <- function(orig.desc,
                             reads.desc,
                             contigs.desc){
-  reads.distro.rmse <- sum(  (reads.desc-orig.desc)^2/length(orig.desc) )^(1/2)
-  contigs.distro.rmse <- sum( (contigs.desc-orig.desc)^2/length(orig.desc) )^(1/2)
+  reads.distro.rmse <- (sum((orig.desc-reads.desc)^2)/length(orig.desc) )^(1/2)
+  contigs.distro.rmse <- (sum((orig.desc-contigs.desc)^2)/length(orig.desc) )^(1/2)
   
   ret <- list(
     "reads.rmse" = reads.distro.rmse,
@@ -267,8 +255,12 @@ inconsistency_resolution <- function(solved_inconsistencies_csv,
         sum(solved.data$RankSolved[which(solved.data$Type == "H")] == rank.solved.inconsistency[[x]]))
 
     solved.inconsistencies.per.type <- rbind(solved.inconsistencies.WR, solved.inconsistencies.WC, solved.inconsistencies.H)
-    colnames(solved.inconsistencies.per.type) <- rank.names[rank.solved.inconsistency]
-
+    
+    if(ncol(solved.inconsistencies.per.type) == 8)
+      colnames(solved.inconsistencies.per.type) <- c(rank.names[rank.solved.inconsistency], "Organism")
+    else
+      colnames(solved.inconsistencies.per.type) <- rank.names[rank.solved.inconsistency]
+    
     # Sum where Inconsistencies are Solved per Inconsistency Type
     sum.solved.ranks.WR <- sapply(1:length(count.rank.solved.inconsistency), function(x)
     sum(solved.inconsistencies.per.type[1,1:x]))
@@ -279,7 +271,10 @@ inconsistency_resolution <- function(solved_inconsistencies_csv,
 
     sum.solved.ranks.per.type <- rbind(sum.solved.ranks.WR,sum.solved.ranks.WC,sum.solved.ranks.H)
     
-    colnames(sum.solved.ranks.per.type) <- rank.names[rank.solved.inconsistency]
+    if(ncol(sum.solved.ranks.per.type) == 8)
+      colnames(sum.solved.ranks.per.type) <- c(rank.names[rank.solved.inconsistency], "Organism")
+    else
+      colnames(sum.solved.ranks.per.type) <- rank.names[rank.solved.inconsistency]
 
     # Normalize
     normalize.sum.solved.ranks.per.type <- sum.solved.ranks.per.type*100/c(sum.solved.ranks.per.type[,ncol(sum.solved.ranks.per.type)])  #as.matrix(sum.solved.ranks.per.type)
