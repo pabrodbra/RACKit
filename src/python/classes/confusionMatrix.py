@@ -59,7 +59,7 @@ class ConfusionMatrixCalculator(object):
                 if(correct):
                     if(specie == r_id):
                         s_cm["tp"] += 1
-                    else if (specie in matches):
+                    elif (specie in matches):
                         s_cm["fp"] += 1
                     else:
                         s_cm["tn"] += 1
@@ -67,7 +67,7 @@ class ConfusionMatrixCalculator(object):
                 else:
                     if(specie == r_id):
                         s_cm["fn"] += 1
-                    else if (specie in matches):
+                    elif (specie in matches):
                         s_cm["fp"] += 1
                     else:
                         s_cm["tn"] += 1
@@ -113,7 +113,7 @@ class ConfusionMatrixCalculator(object):
                 if(correct):
                     if(specie == r_id):
                         s_cm["tp"] += 1
-                    else if (specie in matches):
+                    elif (specie in matches):
                         s_cm["fp"] += 1
                     else:
                         s_cm["tn"] += 1
@@ -121,7 +121,7 @@ class ConfusionMatrixCalculator(object):
                 else:
                     if(specie == r_id):
                         s_cm["fn"] += 1
-                    else if (specie in matches):
+                    elif (specie in matches):
                         s_cm["fp"] += 1
                     else:
                         s_cm["tn"] += 1
