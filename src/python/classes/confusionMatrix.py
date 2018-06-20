@@ -43,8 +43,6 @@ class ConfusionMatrixCalculator(object):
         all_matches = {}
         with open(self.fixed_reads, 'r') as f:
             # >5-NC_014963.1 >NC_014963.1.1  5095226 1;0;90;90;100;0;0;+-;1;90;3586622;3586533
-            current_id = ""
-            correct_match = ""
             for line in f:
                 items = line.split(' ')
                 r_id = items[0].rsplit('.')[0][1:] # >5-NC_014963.1 -> NC_014963.1
@@ -119,7 +117,7 @@ class ConfusionMatrixCalculator(object):
                         s_cm["fp"] += 1
                     else:
                         s_cm["tn"] += 1
-
+                        
                 else:
                     if(specie == r_id):
                         s_cm["fn"] += 1
