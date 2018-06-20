@@ -40,26 +40,39 @@ class ConfusionMatrixCalculator(object):
 
     def read_confusion_matrix(self):
         total = 0
+        all_matches = {}
         with open(self.fixed_reads, 'r') as f:
             # >5-NC_014963.1 >NC_014963.1.1  5095226 1;0;90;90;100;0;0;+-;1;90;3586622;3586533
+            current_id = ""
+            correct_match = ""
             for line in f:
                 items = line.split(' ')
-                r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
+                r_id = items[0].rsplit('.')[0][1:] # >5-NC_014963.1 -> NC_014963.1
                 r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
                 
-                for specie, s_cm in self.reads_all_confusion_matrix.items():
-                    if (r_match == specie):
-                        if(r_match == r_id):
-                           s_cm["tp"] += 1
-                        else:
-                            s_cm["fp"] += 1
+                all_matches[r_id] = r_match
                     
-                    if (r_match != specie):
-                        if(r_match == r_id):
-                            s_cm["tn"] += 1
-                        else:
-                            s_cm["fn"] += 1
-                    total += 1
+                total += 1
+
+        for r_id, matches in all_matches.items():
+            correct = True if r_id in matches else False
+
+            for specie, s_cm in self.reads_all_confusion_matrix.items():
+                if(correct):
+                    if(specie == r_id):
+                        s_cm["tp"] += 1
+                    else if (specie in matches):
+                        s_cm["fp"] += 1
+                    else:
+                        s_cm["tn"] += 1
+
+                else:
+                    if(specie == r_id):
+                        s_cm["fn"] += 1
+                    else if (specie in matches):
+                        s_cm["fp"] += 1
+                    else:
+                        s_cm["tn"] += 1
 
         return total
 
@@ -82,6 +95,7 @@ class ConfusionMatrixCalculator(object):
     def contig_confusion_matrix(self):
         contig_most_representative = self.obtain_contigs_representative_reads()
         total = 0
+        all_matches = {}
         with open(self.fixed_contigs, 'r') as f:
             # >k67_1 flag=1 multi=2.0000 len=207 >NC_014963.1.1  5095226 1;0;207;207;100;0;0;+-;1;207;4289335;4289129
             for line in f:
@@ -89,22 +103,30 @@ class ConfusionMatrixCalculator(object):
                 contig_id = items[0][1:] # >k67_1 -> k67_1
                 contig_match = items[4][1:].rsplit('.',1)[0] # >NC_014963.1.1 -> NC_014963.1
                 # print(contig_id); print(contig_match)
-                representatives = contig_most_representative.get(contig_id, None) #; print(representatives); input()
-                if representatives is not None:
-                    for top_read in representatives:
-                        for specie, s_cm in self.contigs_all_confusion_matrix.items():
-                            if (contig_match == specie):
-                                if(contig_match == top_read):
-                                    s_cm["tp"] += 1
-                                else:
-                                    s_cm["fp"] += 1
-                            
-                            if (contig_match != specie):
-                                if(contig_match == top_read):
-                                    s_cm["tn"] += 1
-                                else:
-                                    s_cm["fn"] += 1
-                            total += 1
+                all_matches[contig_id] = contig_match
+
+        
+        for c_id, matches in all_matches.items():
+            representatives = contig_most_representative.get(contig_id, None) #; print(representatives); input()
+            elems_in_both = set(matches) & set(representatives)
+            correct = True if len(elems_in_both)>0 else False
+
+            for specie, s_cm in self.reads_all_confusion_matrix.items():
+                if(correct):
+                    if(specie == r_id):
+                        s_cm["tp"] += 1
+                    else if (specie in matches):
+                        s_cm["fp"] += 1
+                    else:
+                        s_cm["tn"] += 1
+
+                else:
+                    if(specie == r_id):
+                        s_cm["fn"] += 1
+                    else if (specie in matches):
+                        s_cm["fp"] += 1
+                    else:
+                        s_cm["tn"] += 1
 
         return total
 
