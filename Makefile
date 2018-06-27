@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O3 -D_FILE_OFFSET_BITS=64
+CFLAGS=-O3 -D_FILE_OFFSET_BITS=64 -lm
 BIN=./bin/
 SRC=./src/c/
 

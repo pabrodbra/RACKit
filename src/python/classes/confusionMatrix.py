@@ -35,8 +35,8 @@ class ConfusionMatrixCalculator(object):
             header = f.readline()
             for line in f:
                 items = line.split('\t')
-                self.reads_all_confusion_matrix[items[0][1:]] = make_confusion_matrix_dict()
-                self.contigs_all_confusion_matrix[items[0][1:]] = make_confusion_matrix_dict()
+                self.reads_all_confusion_matrix[items[1]] = make_confusion_matrix_dict()
+                self.contigs_all_confusion_matrix[items[1]] = make_confusion_matrix_dict()
 
     def read_confusion_matrix(self):
         total = 0
@@ -45,7 +45,7 @@ class ConfusionMatrixCalculator(object):
             for line in f:
                 items = line.split(' '); #print(items)
                 r_id = items[0].rsplit('.', 1)[0][1:] #r_id = items[0].split('-')[1] # >5-NC_014963.1 -> NC_014963.1
-                r_match = items[1].rsplit('.', 1)[0][1:]; #print(r_id + " - " + r_match); input() #r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
+                r_match = items[1][1:].rsplit('.', 1)[0] #[1:]; #print(r_id + " - " + r_match); input() #r_match = items[1].rsplit('.', 1)[0][1:] # >NC_014963.1.1 -> NC_014963.1
                 
                 for specie, s_cm in self.reads_all_confusion_matrix.items():
                     #print("Specie: " + specie + " - ReadID" + r_id + " - MatchID: " + r_match)
