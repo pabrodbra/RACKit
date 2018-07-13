@@ -1,9 +1,14 @@
 # Created by https://www.gitignore.io/api/pycharm,webstorm,python,sublimetext,windows,xcode
 
+### Files
+bin/
+
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio
 
 *.iml
+*.knit.md
+*.utf8.md
 
 ## Directory-based project format:
 .idea/

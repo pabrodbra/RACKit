@@ -79,7 +79,7 @@ int main(int argc, char **av){
 			}
 			justJumped=0;
 			if(line[0] == '>'){
-				int fakeLength = 1;
+				int fakeLength = 2; // 1 for 2.2.30+ ; 2 for 2.7.1+
 				while(line[fakeLength] != ' '){
 					genomeID[genomeIDlength]= line[fakeLength];
 					genomeIDlength++;
@@ -349,5 +349,7 @@ int main(int argc, char **av){
 	}
 	fclose(f);
 	fclose(g);
+
+	printf("QNuclParserBlast succesfully executed...\n");
 	return 0;
 }

@@ -120,6 +120,8 @@ int main(int argc, char** argv){
 
 	fclose(fi);
 	fclose(fo);
+	printf("filterParsedBlast succesfully executed...\n");
+	return(0);
 }
 
 /*******************************/
@@ -160,6 +162,6 @@ void printParsedBlastInfo(struct ParsedBlastInfo* pbi){
 
 // Print PBISeqInfo structure
 void printPBISeqInfo(struct PBISeqInfo* psi){
-	printf("ReadID: %s | GenomeID: %s | GenLenth: %d | K Blast: %d\n",
+	printf("ReadID: %s | GenomeID: %s | GenLenth: %"PRIu64" | K Blast: %"PRIu64"\n",
 		psi->readID, psi->genomeID, psi->genLength, psi->k_BLAST);
 }

@@ -3,9 +3,11 @@
 #include <string.h>
 #include <inttypes.h>
 #include <ctype.h>
+#include <math.h>
 
 #define MAX_ID 1000
 #define MAX_BUFFER 50000
+#define MAX_HITS 600000
 #define PNG_DIM 1024
 
 struct ParsedBlastInfo{
@@ -88,6 +90,8 @@ int parseSeqInfo(char* seqInfo, struct PBISeqInfo* psi);
 void printParsedBlastInfo(struct ParsedBlastInfo* pbi);
 // Print PBISeqInfo structure
 void printPBISeqInfo(struct PBISeqInfo* psi);
+// Calculate standard deviation of ratio
+double calculate_sd(uint64_t* array, float mean, uint64_t max_index, uint64_t n_matches);
 // Create TaxoFile
 void makeTaxoFile(char * filename, struct TaxoFile * tf);
 // Initialize TaxoFile
@@ -107,6 +111,8 @@ int main(int argc, char** argv){
 	struct TaxoFile *tf;
 	int64_t DB_LENGTH;
 	char * DB_seq, * DB_seq_c;
+    int64_t * ratio_array;
+    char last_pbi_id[MAX_ID];
 	char buffer[MAX_BUFFER];
 	int64_t scan, temp;
 	int64_t current_reflength, current_start, current_end, coverage_counter = 0, coverage_counter_c = 0;
@@ -136,10 +142,12 @@ int main(int argc, char** argv){
 	makeTaxoFile(argv[3], tf);
 
 	//DEBUG printf("D1: TF Size: %"PRIu64"\n", tf->num_items);
-	
+
 	// Load <uniseqDB> + Obtain DB length¡
 	printf("Loading UniSeq...\n");
-	DB_LENGTH = getLengthFasta(argv[4]);
+	//DB_LENGTH = 1000000000;
+    DB_LENGTH = getLengthFasta(argv[4]);
+    //printf("DB Length :: %"PRId64"\n", DB_LENGTH);
 
 	if ((DB_seq = (char*) calloc(DB_LENGTH, sizeof(char))) == NULL)
 		terror("No memory for Seq");
@@ -147,10 +155,13 @@ int main(int argc, char** argv){
 	if ((DB_seq_c = (char*) calloc(DB_LENGTH, sizeof(char))) == NULL)
 		terror("No memory for Seq_c");
 
+    if ((ratio_array = (uint64_t*) calloc(MAX_HITS,sizeof(uint64_t))) == NULL)
+        terror("No memory for ratio_array");
 	//DEBUG printf("D2: FASTA Length: %"PRId64"\n", DB_LENGTH);
 
-	char ** error_check;
+	char ** error_check; uint64_t ratio_index = 0;
 	double reads_match_ratio = 0.0, contigs_match_ratio = 0.0;
+    double reads_match_sd = 0.0, contigs_match_sd = 0.0;
 	uint64_t reads_match_counter = 0, contigs_match_counter = 0;
 
 	// Read Fixed_Parsed_Blast
@@ -165,7 +176,14 @@ int main(int argc, char** argv){
 		scan = parseSeqInfo(pbi.seqInfo, &psi);
 		if(scan != 4) terror("PSI structure loaded incorrectly");
 
+        // Average matches + standard deviation
 		reads_match_counter++;
+        if(reads_match_counter == 1 || strcmp(last_pbi_id,psi.readID)!=0){
+            strcpy(last_pbi_id,psi.readID);
+            ratio_index++;
+        }
+        ratio_array[ratio_index]++;
+
 		// Obtain RefLength of GenomeID from Taxo file
 		current_reflength = retrieveRefLength(tf, psi);
 		//printf("current RefLength: %"PRId64"\n", current_reflength);
@@ -189,6 +207,9 @@ int main(int argc, char** argv){
 	}
 
 	reads_match_ratio = (double)reads_match_counter/strtod(argv[6], error_check);
+    reads_match_sd = calculate_sd(ratio_array, reads_match_ratio, ratio_index, reads_match_counter);//asciiToUint64(argv[6]));//reads_match_counter);
+
+    ratio_index = 0;
 
 	printf("Reading Fixed_Parsed_Blast_Contigs...\n");
 	while(!feof(fi_c)){
@@ -201,7 +222,13 @@ int main(int argc, char** argv){
 		scan = parseSeqInfo(pbi.seqInfo, &psi);
 		if(scan != 4) terror("PSI structure loaded incorrectly");
 
+        // Mean and sd calc
 		contigs_match_counter++;
+        if(contigs_match_counter == 1 || strcmp(psi.readID, last_pbi_id)!=0){
+            strcpy(last_pbi_id, psi.readID);
+            ratio_index++;
+        }
+        ratio_array[ratio_index]++;
 
 		// Obtain RefLength of GenomeID from Taxo file
 		current_reflength = retrieveRefLength(tf, psi);
@@ -226,6 +253,7 @@ int main(int argc, char** argv){
 	}
 
 	contigs_match_ratio = (double)contigs_match_counter/strtod(argv[7], error_check);
+    contigs_match_sd = calculate_sd(ratio_array, contigs_match_ratio, ratio_index, contigs_match_counter);//asciiToUint64(argv[7]));//contigs_match_counter);
 
 	// Load <Output>
 	if((fo=fopen(argv[5],"wt"))==NULL){
@@ -237,12 +265,12 @@ int main(int argc, char** argv){
 	char name[250];
 	strcpy(name, argv[5]);
 
-	if((fseq=fopen(strcat(name,"READS.seq"),"wt"))==NULL){
-		terror("Can't open FSEQ file");
+	if((fseq=fopen(strcat(name,"_reads.mat"),"wt"))==NULL){
+		terror("Can't open MAT file");
 	}
 	strcpy(name, argv[5]);
-	if((fseq_c=fopen(strcat(name,"CONTIGS.seq"),"wt"))==NULL){
-		terror("Can't open FSEQ file");
+	if((fseq_c=fopen(strcat(name,"_contigs.mat"),"wt"))==NULL){
+		terror("Can't open MAT file");
 	}
 	strcpy(name, argv[5]);
 	if((finfo=fopen(strcat(name,".info"),"wt"))==NULL){
@@ -253,9 +281,9 @@ int main(int argc, char** argv){
 		terror("Can't open RATIO file");
 	}
 
-	fprintf(fratio, "SequenceSet;TotalMatches;NumSequences;MatchesPerSequence\n");
-	fprintf(fratio, "Reads;%"PRIu64";%"PRIu64";%lf\n", reads_match_counter, asciiToUint64(argv[6]), reads_match_ratio);
-	fprintf(fratio, "Contigs;%"PRIu64";%"PRIu64";%lf\n", contigs_match_counter, asciiToUint64(argv[7]), contigs_match_ratio);
+	fprintf(fratio, "SequenceSet;TotalMatches;NumSequences;MatchesPerSequence;Matches_SD\n");
+	fprintf(fratio, "Reads;%"PRIu64";%"PRIu64";%lf;%lf\n", reads_match_counter, asciiToUint64(argv[6]), reads_match_ratio, reads_match_sd);
+	fprintf(fratio, "Contigs;%"PRIu64";%"PRIu64";%lf;%lf\n", contigs_match_counter, asciiToUint64(argv[7]), contigs_match_ratio, contigs_match_sd);
 
 	uint64_t max_hits_per_pixel = (uint64_t)(DB_LENGTH / (PNG_DIM * PNG_DIM)) + 1;
 	uint64_t pixel_counter = 0, hits_at_pixel = 0, hits_at_pixel_c = 0;
@@ -298,7 +326,7 @@ int main(int argc, char** argv){
 		nucleotide_counter++;
 	}
 	coverage = 100 * (double)coverage_counter/(double)DB_LENGTH;
-	both_no = DB_LENGTH - read_hits - contig_hits - both_yes;
+	both_no = DB_LENGTH - read_hits - contig_hits + both_yes;
 	// ---
 
 	fprintf(finfo, "ReadHits\tContigHits\tBothYes\tBothNo\n");
@@ -335,7 +363,7 @@ int main(int argc, char** argv){
 	free(tf);
 
 	// Close INPUT and OUTPUT files
-	printf("Finished...\n");
+	printf("UniseqDBCoverage succesfully executed...\n");
 	fclose(fi);
 	fclose(fo);
 }
@@ -455,7 +483,7 @@ int parsePBI(char * buffer, struct ParsedBlastInfo* pbi){
 	scan=sscanf(buffer,"%[^;];%f;%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64";%[^;];%"PRIu64";%"PRIu64";%"PRIu64";%"PRIu64"\n",
 				&pbi->seqInfo, &pbi->score, &pbi->identity, &pbi->length, &pbi->similarity, &pbi->i_gaps, &pbi->e_gaps, &pbi->strand, &pbi->r_start, &pbi->r_end, &pbi->g_start, &pbi->g_end);
 
-	//DEBUG | printParsedBlastInfo(pbi);
+	//DEBUG |	printParsedBlastInfo(pbi); getchar();
 
 	return scan;
 }
@@ -467,7 +495,15 @@ int parseSeqInfo(char* seqInfo, struct PBISeqInfo* psi){
 	scan = sscanf(seqInfo, ">%[^>]>%[^ ] %"PRIu64" %"PRIu64,
 		&psi->readID, &psi->genomeID, &psi->genLength, &psi->k_BLAST);
 
-	//DEBUG | printPBISeqInfo(psi);
+    char* found = strchr(psi->genomeID, '.');
+    size_t len = found - psi->genomeID;
+    psi->genomeID[len]='\0';
+    found = strchr(psi->readID, '.');
+    len = found - psi->readID;
+    psi->readID[len]='\0';
+    //psi->genomeID[strlen(psi->genomeID)-2]='\0';
+
+	//DEBUG |	printPBISeqInfo(psi); getchar();
 	return scan;
 }
 // Print ParsedBlastInfo structure
@@ -481,6 +517,20 @@ void printPBISeqInfo(struct PBISeqInfo* psi){
 	printf("ReadID: %s | GenomeID: %s | GenLenth: %d | K Blast: %d\n",
 		psi->readID, psi->genomeID, psi->genLength, psi->k_BLAST);
 }
+
+// Calculate standard deviation of top matches
+double calculate_sd(uint64_t* array, float mean, uint64_t max_index, uint64_t n_matches){
+    printf("Max index :: %"PRIu64"\n", max_index);
+    int i;
+    double sd = 0;
+    for(i = 1; i<max_index; i++){
+        int diff = array[i]-mean;
+        sd += pow(diff,2);
+    }
+    sd = sqrt((double)sd/n_matches);
+    return sd;
+}
+
 
 // Hash Sequence ID
 uint64_t hashSequenceID(char* genomeID, uint64_t hashsize){
@@ -505,8 +555,8 @@ int64_t retrieveRefLength(struct TaxoFile * tf, struct PBISeqInfo psi){
 
 	ti = tf->items[current_hash];
 	while(FOUND == 0 && ti != NULL){
-		/*printf("G1: |%s|%d|\n", psi.genomeID, hashSequenceID(psi.genomeID, tf->num_items));
-		printf("G2: |%s|%d|\n", ti->taxoName, hashSequenceID(ti->taxoName, tf->num_items));*/
+		//printf("G1: |%s|%d|\n", psi.genomeID, hashSequenceID(psi.genomeID, tf->num_items));
+		//printf("G2: |%s|%d|\n", ti->taxoName, hashSequenceID(ti->taxoName, tf->num_items));
 
 		if(strcmp(psi.genomeID, ti->taxoName)==0){
 			FOUND = 1;
@@ -562,7 +612,7 @@ void makeTaxoFile(char* filename, struct TaxoFile * tf){
 
 	initTaxoFile(tf, tf_size);
     // Read line by line and create new TaxoItem
-    int counter = 0;
+	int counter = 0;
 	while(!feof(fi)){
 
 		fgets(buffer, MAX_BUFFER, fi);
@@ -577,7 +627,7 @@ void makeTaxoFile(char* filename, struct TaxoFile * tf){
 		// If read properly, then add TaxoItem to TaxoFile
 		if(scan==3){
 			temp_hash = hashSequenceID(new_ti.taxoName, tf_size);
-						
+			//printf("Current hash: %d\n", temp_hash);
 			if(tf->items[temp_hash]->taxoID == -1){
 				tf->items[temp_hash]->taxoID = new_ti.taxoID;
 				tf->items[temp_hash]->refLength = new_ti.refLength;
@@ -601,5 +651,5 @@ void makeTaxoFile(char* filename, struct TaxoFile * tf){
 			counter++;
 		}
 	}
-	//printf("Counter: %d\n", counter);
+	//printf("Counter: %d\n", counter); getchar();
 }

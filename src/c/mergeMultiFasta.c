@@ -15,9 +15,10 @@ void mergeMultiFasta(char* i_filename, char* o_filename);
 
 int main(int argc, char** argv){
 	if (argc < 3)
-			terror("USE: ./MergeMultiFasta <multifasta> <output>");
+			terror("USE: ./mergeMultiFasta <multifasta> <output>");
 
 	mergeMultiFasta(argv[1], argv[2]);
+	printf("mergeMultiFasta succesfully executed...\n");
 }
 
 /*******************************/
